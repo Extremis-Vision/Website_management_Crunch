@@ -1,41 +1,173 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ajouter Commande</title>
     <style>
-        .item-row {
-            margin: 10px 0;
-            padding: 5px;
-            border: 1px solid #ddd;
+        :root {
+            --primary-blue: #2c3e50;
+            --secondary-blue: #34495e;
+            --primary-red: #e74c3c;
+            --secondary-red: #c0392b;
+            --white: #ffffff;
+            --light-gray: #f5f6fa;
+            --border-gray: #dcdde1;
         }
-        .remove-item {
-            color: red;
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-gray);
+            margin: 0;
+            padding: 20px;
+            color: var(--primary-blue);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: var(--primary-blue);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-gray);
+            border-radius: 25px;
+            font-size: 1em;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 10px rgba(44, 62, 80, 0.1);
+        }
+
+        .item-row {
+            background-color: var(--light-gray);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 2fr 2fr 1fr 40px;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 25px;
+            background: linear-gradient(45deg, var(--primary-blue), var(--primary-red));
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
             cursor: pointer;
-            margin-left: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 10px 0;
+        }
+
+        .button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            background: linear-gradient(45deg, var(--primary-red), var(--primary-blue));
+        }
+
+        .button-secondary {
+            background: var(--secondary-blue);
+        }
+
+        .remove-item {
+            color: var(--primary-red);
+            cursor: pointer;
+            font-size: 1.2em;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .remove-item:hover {
+            background-color: var(--primary-red);
+            color: var(--white);
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .add-groupe-btn {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .add-groupe-btn:hover {
+            color: var(--primary-red);
         }
     </style>
 </head>
 <body>
-    <h1>Ajouter une nouvelle Commande</h1>
-    <a href="{{ url_for('add_groupe') }}">Ajouter un nouveau groupe</a>
-    <form action="{{ url_for('add_commande') }}" method="POST" id="commandeForm">
-        <label for="id_groupe">Groupe:</label>
-        <select name="id_groupe" id="id_groupe" required>
-            {% for groupe in groupes %}
-                <option value="{{ groupe.id_groupe }}">{{ groupe.Nom }} {{ groupe.Prenom }}</option>
-            {% endfor %}
-        </select>
-        <br>
-        <div id="itemsContainer">
-            <!-- Les items seront ajoutés ici -->
+    <div class="container">
+        <h1>Ajouter une nouvelle Commande</h1>
+        
+        <form action="{{ url_for('add_commande') }}" method="POST" id="commandeForm">
+            <div class="form-group">
+                <label for="id_groupe">Groupe:</label>
+                <select name="id_groupe" id="id_groupe" required>
+                    {% for groupe in groupes %}
+                        <option value="{{ groupe.id_groupe }}">{{ groupe.Nom }} {{ groupe.Prenom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="itemsContainer">
+                <!-- Les items seront ajoutés ici -->
+            </div>
+
+            <button type="button" onclick="addItem()" class="button button-secondary">+ Ajouter un item</button>
+            <button type="submit" class="button">Valider la commande</button>
+        </form>
+
+        <div class="navigation">
+            <a href="{{ url_for('add_groupe') }}" class="add-groupe-btn">+ Ajouter un nouveau groupe</a>
+            <a href="{{ url_for('home') }}" class="button button-secondary">Retour à l'accueil</a>
         </div>
-        <button type="button" onclick="addItem()">Ajouter un item</button>
-        <br>
-        <button type="submit">Ajouter Commande</button>
-    </form>
-    <a href="{{ url_for('home') }}">Retour à l'accueil</a>
+    </div>
 
     <script>
         function addItem() {
@@ -46,12 +178,11 @@
                 <input type="text" name="nom[]" placeholder="Nom" required>
                 <input type="text" name="technique[]" placeholder="Technique (optionnel)">
                 <input type="number" name="nombre[]" placeholder="Nombre" value="1" min="1" required>
-                <span class="remove-item" onclick="this.parentElement.remove()">❌</span>
+                <span class="remove-item" onclick="this.parentElement.remove()">×</span>
             `;
             container.appendChild(itemDiv);
         }
 
-        // Ajouter un premier item par défaut
         document.addEventListener('DOMContentLoaded', function() {
             addItem();
         });

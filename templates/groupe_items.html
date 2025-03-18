@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Items par Groupe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            margin: 20px 0;
+        }
+        .select-group {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+        select, button {
+            padding: 8px;
+            margin: 5px;
+        }
+        .items-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .items-section {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .a-rendre {
+            border-left: 4px solid #ff4444;
+        }
+        .rendu {
+            border-left: 4px solid #4CAF50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f8f8;
+        }
+        .retour-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .retour-btn:hover {
+            background-color: #367c39;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gestion des Items par Groupe</h1>
+    
+    {% if not groupe %}
+    <div class="select-group">
+        <form method="POST">
+            <select name="id_groupe" required>
+                <option value="">Sélectionnez un groupe</option>
+                {% for g in groupes %}
+                <option value="{{ g.id_groupe }}">{{ g.table }} - {{ g.Nom }} {{ g.Prenom }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Voir les items</button>
+        </form>
+    </div>
+    {% else %}
+    <h2>Items pour {{ groupe.table }} - {{ groupe.Nom }} {{ groupe.Prenom }}</h2>
+    
+    <div class="items-container">
+        <div class="items-section a-rendre">
+            <h3>À Rendre</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Technique</th>
+                        <th>Nombre</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items_a_rendre %}
+                    <tr>
+                        <td>{{ item.nom }}</td>
+                        <td>{{ item.technique if item.technique else '-' }}</td>
+                        <td>{{ item.nombre }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="items-section rendu">
+            <h3>Rendus</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Technique</th>
+                        <th>Nombre</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items_rendus %}
+                    <tr>
+                        <td>{{ item.nom }}</td>
+                        <td>{{ item.technique if item.technique else '-' }}</td>
+                        <td>{{ item.nombre }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    
+    <a href="{{ url_for('home') }}" class="retour-btn">Retour à l'accueil</a>
+</body>
+</html>

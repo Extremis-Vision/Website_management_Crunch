@@ -64,12 +64,9 @@ def home():
             groupe = Groupe.query.get(commande.id_groupe)
             items = Items.query.filter_by(id_commande=commande.id_commande).all()
             
-            if items:
+            if items:  # Seulement ajouter si la commande a des items
                 for item in items:
                     results.append((commande, groupe, item, len(items)))
-            else:
-                # Ajouter une ligne même s'il n'y a pas d'items
-                results.append((commande, groupe, None, 0))
         
         return render_template('home.html', commandes=results)
     except Exception as e:
@@ -158,12 +155,71 @@ def change_status(id_cart):
     flash('Statut modifié avec succès!', 'success')
     return redirect(url_for('home'))
 
+@app.route('/groupe_items', methods=['GET', 'POST'])
+def groupe_items():
+    try:
+        if request.method == 'POST':
+            id_groupe = request.form['id_groupe']
+            groupe = Groupe.query.get_or_404(id_groupe)
+            
+            # Récupérer toutes les commandes du groupe
+            commandes = Commande.query.filter_by(id_groupe=id_groupe).all()
+            
+            items_a_rendre = []
+            items_rendus = []
+            
+            for commande in commandes:
+                items = Items.query.filter_by(id_commande=commande.id_commande).all()
+                for item in items:
+                    if item.status == "A rendre":
+                        items_a_rendre.append(item)
+                    else:
+                        items_rendus.append(item)
+            
+            return render_template('groupe_items.html', 
+                                groupe=groupe,
+                                items_a_rendre=items_a_rendre,
+                                items_rendus=items_rendus)
+        
+        # Si GET, afficher le formulaire de sélection
+        groupes = Groupe.query.all()
+        return render_template('groupe_items.html', groupes=groupes)
+        
+    except Exception as e:
+        flash('Une erreur est survenue: ' + str(e), 'error')
+        return redirect(url_for('home'))
+
+@app.route('/delete_item/<int:id_cart>', methods=['POST'])
+def delete_item(id_cart):
+    item = Items.query.get_or_404(id_cart)
+    try:
+        db.session.delete(item)
+        db.session.commit()
+        flash('Item supprimé avec succès!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Erreur lors de la suppression: ' + str(e), 'error')
+    return redirect(url_for('home'))
+
+@app.route('/edit_item/<int:id_cart>', methods=['GET', 'POST'])
+def edit_item(id_cart):
+    item = Items.query.get_or_404(id_cart)
+    if request.method == 'POST':
+        try:
+            item.nom = request.form['nom']
+            item.technique = request.form['technique']
+            item.nombre = int(request.form['nombre'])
+            db.session.commit()
+            flash('Item modifié avec succès!', 'success')
+            return redirect(url_for('home'))
+        except Exception as e:
+            db.session.rollback()
+            flash('Erreur lors de la modification: ' + str(e), 'error')
+    return render_template('edit_item.html', item=item)
+
 if __name__ == "__main__":
     # Attendre que la base de données soit prête
     with app.app_context():
-        wait_for_db()
-        # Supprime toutes les tables existantes
-        db.drop_all()
         # Recrée les tables avec la nouvelle structure
         db.create_all()
     app.run(debug=False, host="0.0.0.0", port=5000)

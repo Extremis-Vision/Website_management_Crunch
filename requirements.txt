@@ -5,10 +5,8 @@ psycopg2-binary
 apscheduler
 fastapi==0.95.1
 uvicorn==0.22.0
-krakenex==2.1.0
 requests==2.28.2
 python-dotenv==1.0.0
-python-binance
 ccxt
 mysql-connector-python
 Flask==2.3.2
