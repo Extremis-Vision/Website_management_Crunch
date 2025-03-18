@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajouter Commande</title>
+    <style>
+        .item-row {
+            margin: 10px 0;
+            padding: 5px;
+            border: 1px solid #ddd;
+        }
+        .remove-item {
+            color: red;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ajouter une nouvelle Commande</h1>
+    <a href="{{ url_for('add_groupe') }}">Ajouter un nouveau groupe</a>
+    <form action="{{ url_for('add_commande') }}" method="POST" id="commandeForm">
+        <label for="id_groupe">Groupe:</label>
+        <select name="id_groupe" id="id_groupe" required>
+            {% for groupe in groupes %}
+                <option value="{{ groupe.id_groupe }}">{{ groupe.Nom }} {{ groupe.Prenom }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <div id="itemsContainer">
+            <!-- Les items seront ajoutés ici -->
+        </div>
+        <button type="button" onclick="addItem()">Ajouter un item</button>
+        <br>
+        <button type="submit">Ajouter Commande</button>
+    </form>
+    <a href="{{ url_for('home') }}">Retour à l'accueil</a>
+
+    <script>
+        function addItem() {
+            const container = document.getElementById('itemsContainer');
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'item-row';
+            itemDiv.innerHTML = `
+                <input type="text" name="nom[]" placeholder="Nom" required>
+                <input type="text" name="technique[]" placeholder="Technique (optionnel)">
+                <input type="number" name="nombre[]" placeholder="Nombre" value="1" min="1" required>
+                <span class="remove-item" onclick="this.parentElement.remove()">❌</span>
+            `;
+            container.appendChild(itemDiv);
+        }
+
+        // Ajouter un premier item par défaut
+        document.addEventListener('DOMContentLoaded', function() {
+            addItem();
+        });
+    </script>
+</body>
+</html>
