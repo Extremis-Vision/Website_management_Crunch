@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modifier Commande</title>
+    <title>Ajouter Commande</title>
     <style>
         :root {
             --primary-blue: #2c3e50;
@@ -32,37 +32,40 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
 
-        h1, h2 {
+        h1 {
             color: var(--primary-blue);
             text-align: center;
             margin-bottom: 30px;
-            font-size: 2em;
+            font-size: 2.5em;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
 
-        h1 {
-            font-size: 2.5em;
+        .form-group {
+            margin-bottom: 20px;
         }
 
-        .existing-items {
-            background-color: var(--light-gray);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--primary-blue);
+            font-weight: 600;
         }
 
-        .existing-items ul {
-            list-style: none;
-            padding: 0;
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-gray);
+            border-radius: 25px;
+            font-size: 1em;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
         }
 
-        .existing-items li {
-            padding: 10px;
-            margin: 5px 0;
-            background-color: var(--white);
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 10px rgba(44, 62, 80, 0.1);
         }
 
         .item-row {
@@ -74,21 +77,6 @@
             grid-template-columns: 2fr 2fr 1fr 40px;
             gap: 15px;
             align-items: center;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid var(--border-gray);
-            border-radius: 25px;
-            font-size: 1em;
-            transition: all 0.3s ease;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 10px rgba(44, 62, 80, 0.1);
         }
 
         .button {
@@ -140,32 +128,43 @@
             justify-content: space-between;
             margin-top: 20px;
         }
+
+        .add-groupe-btn {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .add-groupe-btn:hover {
+            color: var(--primary-red);
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Modifier la commande #{{ commande.id_commande }}</h1>
+        <h1>Ajouter une nouvelle Commande</h1>
         
-        <div class="existing-items">
-            <h2>Items existants</h2>
-            <ul>
-            {% for item in items %}
-                <li>{{ item.nom }} {% if item.technique %}({{ item.technique }}){% endif %} - {{ item.status }}</li>
-            {% endfor %}
-            </ul>
-        </div>
+        <form action="{{ url_for('add_commande') }}" method="POST" id="commandeForm">
+            <div class="form-group">
+                <label for="id_groupe">Groupe:</label>
+                <select name="id_groupe" id="id_groupe" required>
+                    {% for groupe in groupes %}
+                        <option value="{{ groupe.id_groupe }}">{{ groupe.Nom }} {{ groupe.Prenom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-        <h2>Ajouter de nouveaux items</h2>
-        <form action="{{ url_for('edit_commande', id_commande=commande.id_commande) }}" method="POST" id="editForm">
             <div id="itemsContainer">
                 <!-- Les items seront ajoutés ici -->
             </div>
 
             <button type="button" onclick="addItem()" class="button button-secondary">+ Ajouter un item</button>
-            <button type="submit" class="button">Enregistrer les modifications</button>
+            <button type="submit" class="button">Valider la commande</button>
         </form>
 
         <div class="navigation">
+            <a href="{{ url_for('add_groupe') }}" class="add-groupe-btn">+ Ajouter un nouveau groupe</a>
             <a href="{{ url_for('home') }}" class="button button-secondary">Retour à l'accueil</a>
         </div>
     </div>

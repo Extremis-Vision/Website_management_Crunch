@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Commandes</title>
+    <style>
+        :root {
+            --primary-blue: #2c3e50;
+            --secondary-blue: #34495e;
+            --primary-red: #e74c3c;
+            --secondary-red: #c0392b;
+            --white: #ffffff;
+            --light-gray: #f5f6fa;
+            --border-gray: #dcdde1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-gray);
+            margin: 0;
+            padding: 20px;
+            color: var(--primary-blue);
+        }
+
+        h1 {
+            color: var(--primary-blue);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .search-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .search-container input {
+            padding: 12px 20px;
+            width: 300px;
+            border: 2px solid var(--border-gray);
+            border-radius: 25px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .search-container input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 10px rgba(44, 62, 80, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 20px 0;
+            background-color: var(--white);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background-color: var(--primary-blue);
+            color: var(--white);
+            font-weight: 600;
+            padding: 15px;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-gray);
+            color: var(--secondary-blue);
+        }
+
+        tr:hover {
+            background-color: rgba(44, 62, 80, 0.05);
+        }
+
+        .status-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background-color: var(--primary-red);
+            color: var(--white);
+        }
+
+        .status-btn.rendu {
+            background-color: #2ecc71;
+        }
+
+        .button {
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background-color: var(--primary-blue);
+            color: var(--white);
+            border: none;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background-color: var(--secondary-blue);
+            transform: translateY(-2px);
+        }
+
+        .button-delete {
+            background-color: var(--primary-red);
+            color: var(--white);
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .button-delete:hover {
+            background-color: var(--secondary-red);
+            transform: translateY(-2px);
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .add-commande-btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, var(--primary-blue), var(--primary-red));
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .add-commande-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            background: linear-gradient(45deg, var(--primary-red), var(--primary-blue));
+        }
+
+        .add-commande-btn:active {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <h1>Liste des Commandes</h1>
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Rechercher...">
+        <a href="{{ url_for('add_commande') }}" class="add-commande-btn">Ajouter une commande</a>
+    </div>
+    <table id="commandesTable">
+        <thead>
+            <tr>
+                <th>ID Commande</th>
+                <th>Date/Heure</th>
+                <th>Groupe</th>
+                <th>Item</th>
+                <th>Nombre</th>
+                <th>Status</th>
+                <th>Technique</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for commande, groupe, item, count in commandes %}
+            <tr>
+                <td>{{ commande.id_commande }}</td>
+                <td>{{ commande.date_hour.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td>{{ groupe.Nom }} {{ groupe.Prenom }}</td>
+                <td>{{ item.nom if item else '-' }}</td>
+                <td>{{ item.nombre if item else '0' }}</td>
+                <td>
+                    {% if item %}
+                        <form action="{{ url_for('change_status', id_cart=item.id_cart) }}" method="POST" style="display: inline;">
+                            <button type="submit" class="status-btn {% if item.status == 'Rendu' %}rendu{% endif %}">
+                                {{ item.status }}
+                            </button>
+                        </form>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ item.technique if item and item.technique else '-' }}</td>
+                <td>
+                    {% if item %}
+                        <a href="{{ url_for('edit_item', id_cart=item.id_cart) }}" class="button">Modifier</a>
+                        <form action="{{ url_for('delete_item', id_cart=item.id_cart) }}" method="POST" style="display: inline;">
+                            <button type="submit" class="button-delete" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet item ?')">
+                                Supprimer
+                            </button>
+                        </form>
+                    {% endif %}
+                    <a href="{{ url_for('edit_commande', id_commande=commande.id_commande) }}" class="button">Ajouter Items</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        // Fonction de recherche
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            let searchText = this.value.toLowerCase();
+            let table = document.getElementById('commandesTable');
+            let rows = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < rows.length; i++) {
+                let show = false;
+                let cells = rows[i].getElementsByTagName('td');
+                for (let cell of cells) {
+                    if (cell.textContent.toLowerCase().indexOf(searchText) > -1) {
+                        show = true;
+                        break;
+                    }
+                }
+                rows[i].style.display = show ? '' : 'none';
+            }
+        });
+
+        // Fonction de tri
+        function sortTable(n) {
+            let table = document.getElementById('commandesTable');
+            let rows = Array.from(table.rows).slice(1);
+            let headers = table.getElementsByTagName('th');
+            let direction = headers[n].className === 'asc' ? -1 : 1;
+
+            // Réinitialiser les autres en-têtes
+            for (let header of headers) {
+                header.className = '';
+            }
+            headers[n].className = direction === 1 ? 'asc' : 'desc';
+
+            rows.sort((a, b) => {
+                let x = a.cells[n].textContent.trim();
+                let y = b.cells[n].textContent.trim();
+                
+                // Trier les nombres correctement
+                if (!isNaN(x) && !isNaN(y)) {
+                    return direction * (parseFloat(x) - parseFloat(y));
+                }
+                // Trier les dates correctement
+                if (n === 1) { // index de la colonne date
+                    return direction * (new Date(x) - new Date(y));
+                }
+                return direction * x.localeCompare(y);
+            });
+
+            for (let row of rows) {
+                table.appendChild(row);
+            }
+        }
+
+        // Ajouter les événements de tri sur les en-têtes
+        document.querySelectorAll('#commandesTable th').forEach((header, index) => {
+            header.addEventListener('click', () => sortTable(index));
+        });
+    </script>
+</body>
+</html>
