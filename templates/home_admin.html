@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liste des Commandes</title>
+
     <style>
         :root {
             --primary-blue: #2c3e50;
@@ -295,14 +293,67 @@
         .column-menu input[type="checkbox"] {
             margin-right: 8px;
         }
+
+        .admin-actions {
+        display: flex;
+        gap: 15px;
+        margin-left: auto;
+    }
+
+    .admin-btn {
+        background-color: var(--secondary-blue);
+        color: var(--white);
+        padding: 10px 20px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .admin-btn:hover {
+        background-color: var(--primary-blue);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .menu-container {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .menu-center {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+    }
     </style>
 </head>
 <body>
-    <h1>Liste des Commandes</h1>
+    <h1>Administration - Liste des Commandes</h1>
     
-    <!-- Nouveau menu -->
+    <!-- Menu modifié pour l'admin -->
     <div class="menu-container">
         <h2 class="menu-title">Gestion des commandes</h2>
+        
+        <div class="menu-center">
+            <div class="admin-actions">
+                <a href="{{ url_for('setup') }}" class="admin-btn">
+                    <i class="fas fa-cog"></i>
+                    Configuration
+                </a>
+                <a href="{{ url_for('restore_db') }}" class="admin-btn">
+                    <i class="fas fa-database"></i>
+                    Restauration
+                </a>
+            </div>
+        </div>
+
         <div class="menu-actions">
             <a href="{{ url_for('export_all_data') }}" class="export-btn">
                 <i class="fas fa-download"></i>
@@ -313,7 +364,6 @@
             </a>
         </div>
     </div>
-
     <div class="search-container">
         <div style="display: flex; gap: 20px; align-items: center;">
             <input type="text" id="searchInput" placeholder="Rechercher...">

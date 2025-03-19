@@ -1,44 +1,265 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restauration - Crunchtime</title>
+    <style>
+        :root {
+            --primary-blue: #2c3e50;
+            --secondary-blue: #34495e;
+            --primary-red: #e74c3c;
+            --secondary-red: #c0392b;
+            --white: #ffffff;
+            --light-gray: #f5f6fa;
+            --border-gray: #dcdde1;
+        }
 
-{% block content %}
-<div class="container mt-5">
-    <div class="card">
-        <div class="card-header">
-            <h3>Restaurer la base de données</h3>
-        </div>
-        <div class="card-body">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            
-            <form method="POST" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="sql_file">Fichier SQL de sauvegarde</label>
-                    <div class="custom-file">
-                        <input type="file" class="custom-file-input" id="sql_file" name="sql_file" accept=".sql" required>
-                        <label class="custom-file-label" for="sql_file">Choisir un fichier...</label>
-                    </div>
-                </div>
-                <div class="alert alert-warning">
-                    <strong>Attention!</strong> La restauration écrasera toutes les données existantes.
-                </div>
-                <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir restaurer la base de données ?');">Restaurer</button>
-                <a href="{{ url_for('home') }}" class="btn btn-secondary">Annuler</a>
-            </form>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-gray);
+            margin: 0;
+            padding: 20px;
+            color: var(--primary-blue);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: var(--primary-blue);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .menu-container {
+            background: linear-gradient(45deg, var(--primary-blue), var(--secondary-blue));
+            padding: 15px 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .menu-title {
+            color: var(--white);
+            margin: 0;
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+
+        .menu-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .menu-btn {
+            background-color: var(--white);
+            color: var(--primary-blue);
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .menu-btn:hover {
+            background-color: transparent;
+            color: var(--white);
+            border-color: var(--white);
+            transform: translateY(-2px);
+        }
+
+        .menu-btn-red {
+            background-color: var(--primary-red);
+            color: var(--white);
+        }
+
+        .menu-btn-red:hover {
+            background-color: var(--secondary-red);
+            border-color: var(--white);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .file-upload-label {
+            display: block;
+            padding: 15px;
+            background: var(--white);
+            border: 2px dashed var(--border-gray);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-label:hover {
+            border-color: var(--primary-blue);
+            background-color: var(--light-gray);
+        }
+
+        .file-upload input[type="file"] {
+            position: absolute;
+            width: 0;
+            height: 0;
+            opacity: 0;
+        }
+
+        .warning-message {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border: 1px solid #ffeeba;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .submit-btn {
+            padding: 12px 30px;
+            background: var(--primary-red);
+            color: var(--white);
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .submit-btn:hover {
+            background: var(--secondary-red);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .cancel-btn {
+            padding: 12px 30px;
+            background: var(--primary-blue);
+            color: var(--white);
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .cancel-btn:hover {
+            background: var(--secondary-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .alert {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border: 1px solid transparent;
+        }
+
+        .alert-error {
+            background-color: var(--primary-red);
+            color: var(--white);
+        }
+
+        .alert-success {
+            background-color: #2ecc71;
+            color: var(--white);
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-container">
+        <h2 class="menu-title">Restauration de la base de données</h2>
+        <div class="menu-actions">
+            <a href="{{ url_for('home') }}" class="menu-btn">
+                <i class="fas fa-home"></i>
+                Retour à l'accueil
+            </a>
+            <a href="{{ url_for('backup') }}" class="menu-btn">
+                <i class="fas fa-download"></i>
+                Sauvegarder DB
+            </a>
+            <a href="{{ url_for('logout') }}" class="menu-btn menu-btn-red">
+                Déconnexion
+            </a>
         </div>
     </div>
-</div>
 
-<script>
-// Afficher le nom du fichier sélectionné
-document.querySelector('.custom-file-input').addEventListener('change', function(e) {
-    var fileName = e.target.files[0].name;
-    var label = e.target.nextElementSibling;
-    label.textContent = fileName;
-});
-</script>
-{% endblock %}
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" enctype="multipart/form-data">
+            <div class="file-upload">
+                <label class="file-upload-label" for="sql_file">
+                    <span id="file-chosen">Choisir un fichier SQL</span>
+                    <input type="file" id="sql_file" name="sql_file" accept=".sql" required>
+                </label>
+            </div>
+
+            <div class="warning-message">
+                <strong>⚠️ Attention!</strong> La restauration écrasera toutes les données existantes.
+                Assurez-vous d'avoir une sauvegarde avant de procéder.
+            </div>
+
+            <div class="button-container">
+                <a href="{{ url_for('home') }}" class="cancel-btn">Annuler</a>
+                <button type="submit" class="submit-btn" onclick="return confirm('Êtes-vous sûr de vouloir restaurer la base de données ?');">
+                    Restaurer la base de données
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const fileInput = document.querySelector('#sql_file');
+        const fileChosen = document.querySelector('#file-chosen');
+
+        fileInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                fileChosen.textContent = this.files[0].name;
+            } else {
+                fileChosen.textContent = 'Choisir un fichier SQL';
+            }
+        });
+    </script>
+</body>
+</html>

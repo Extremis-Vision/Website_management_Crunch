@@ -37,7 +37,7 @@ def get_db_url():
 app.config["SQLALCHEMY_DATABASE_URI"] = get_db_url()
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'cle_defaut_insecurisee')
-ADMIN_USER = os.environ.get('ADMIN_USER', 'admin')
+ADMIN_USER = os.environ.get('ADMIN_USER', 'CrunchlabUTBM2025')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'password')
 
 db = SQLAlchemy(app)
@@ -97,6 +97,34 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
+
+@app.route('/admin')
+@login_required
+def admin_home():
+    try:
+        user = User.query.get(session['user_id'])
+        if user.username != ADMIN_USER:
+            return redirect(url_for('home'))
+            
+        commandes = (db.session.query(Commande)
+                    .join(Groupe)
+                    .filter(Groupe.user_id == session['user_id'])
+                    .all())
+        results = []
+        
+        for commande in commandes:
+            groupe = Groupe.query.get(commande.id_groupe)
+            items = Items.query.filter_by(id_commande=commande.id_commande).all()
+            
+            if items:
+                for item in items:
+                    results.append((commande, groupe, item, len(items)))
+        
+        return render_template('home_admin.html', commandes=results)
+    except Exception as e:
+        app.logger.error(f"Erreur dans la route admin_home: {str(e)}")
+        flash('Une erreur est survenue lors du chargement des données', 'error')
+        return render_template('error.html', error=str(e))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
