@@ -91,7 +91,7 @@
         td {
             padding: 15px;
             border-bottom: 1px solid var(--border-gray);
-            color: var(--secondary-blue);
+            color: var (--secondary-blue);
         }
 
         tr:hover {
@@ -180,14 +180,76 @@
             transform: translateY(-1px);
             box-shadow: 0 3px 10px rgba(0,0,0,0.2);
         }
+
+        /* Nouveau style pour le menu */
+        .menu-container {
+            background: linear-gradient(45deg, var(--primary-blue), var(--secondary-blue));
+            padding: 15px 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .menu-title {
+            color: var(--white);
+            margin: 0;
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+
+        .menu-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .export-btn {
+            background-color: var(--white);
+            color: var(--primary-blue);
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .export-btn:hover {
+            background-color: transparent;
+            color: var(--white);
+            border-color: var(--white);
+            transform: translateY(-2px);
+        }
+
+        .export-btn i {
+            font-size: 1.1em;
+        }
     </style>
 </head>
 <body>
     <h1>Liste des Commandes</h1>
+    
+    <!-- Nouveau menu -->
+    <div class="menu-container">
+        <h2 class="menu-title">Gestion des commandes</h2>
+        <div class="menu-actions">
+            <a href="{{ url_for('export_all_data') }}" class="export-btn">
+                <i class="fas fa-download"></i>
+                Exporter les données
+            </a>
+        </div>
+    </div>
+
     <div class="search-container">
         <input type="text" id="searchInput" placeholder="Rechercher...">
         <a href="{{ url_for('add_commande') }}" class="add-commande-btn">Ajouter une commande</a>
     </div>
+
     <table id="commandesTable">
         <thead>
             <tr>

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header">
+            <h3>Restaurer la base de données</h3>
+        </div>
+        <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="sql_file">Fichier SQL de sauvegarde</label>
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" id="sql_file" name="sql_file" accept=".sql" required>
+                        <label class="custom-file-label" for="sql_file">Choisir un fichier...</label>
+                    </div>
+                </div>
+                <div class="alert alert-warning">
+                    <strong>Attention!</strong> La restauration écrasera toutes les données existantes.
+                </div>
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir restaurer la base de données ?');">Restaurer</button>
+                <a href="{{ url_for('home') }}" class="btn btn-secondary">Annuler</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Afficher le nom du fichier sélectionné
+document.querySelector('.custom-file-input').addEventListener('change', function(e) {
+    var fileName = e.target.files[0].name;
+    var label = e.target.nextElementSibling;
+    label.textContent = fileName;
+});
+</script>
+{% endblock %}
