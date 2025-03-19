@@ -238,7 +238,6 @@ def change_status(id_cart):
     return redirect(url_for('home'))
 
 @app.route('/groupe_items', methods=['GET', 'POST'])
-@login_required
 def groupe_items():
     try:
         if request.method == 'POST':
