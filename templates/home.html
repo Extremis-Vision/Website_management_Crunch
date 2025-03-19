@@ -321,6 +321,7 @@
                         </form>
                     {% endif %}
                     <a href="{{ url_for('edit_commande', id_commande=commande.id_commande) }}" class="button">Ajouter Items</a>
+                    <a href="{{ url_for('edit_groupe', id_groupe=groupe.id_groupe) }}" class="button">Modifier Groupe</a>
                 </td>
             </tr>
             {% endfor %}

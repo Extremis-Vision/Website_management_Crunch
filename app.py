@@ -314,6 +314,31 @@ def edit_item(id_cart):
             flash('Erreur lors de la modification: ' + str(e), 'error')
     return render_template('edit_item.html', item=item)
 
+@app.route('/edit_groupe/<int:id_groupe>', methods=['GET', 'POST'])
+@login_required
+def edit_groupe(id_groupe):
+    groupe = Groupe.query.get_or_404(id_groupe)
+    
+    # Vérifier que le groupe appartient à l'utilisateur connecté
+    if groupe.user_id != session['user_id']:
+        flash('Vous n\'avez pas la permission de modifier ce groupe', 'error')
+        return redirect(url_for('home'))
+    
+    if request.method == 'POST':
+        try:
+            groupe.table = request.form['table']
+            groupe.Nom = request.form['nom']
+            groupe.Prenom = request.form['prenom']
+            
+            db.session.commit()
+            flash('Groupe modifié avec succès!', 'success')
+            return redirect(url_for('home'))
+        except Exception as e:
+            db.session.rollback()
+            flash('Erreur lors de la modification: ' + str(e), 'error')
+    
+    return render_template('edit_groupe.html', groupe=groupe)
+
 def init_db():
     try:
         with app.app_context():
