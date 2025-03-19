@@ -9,6 +9,7 @@
             --primary-blue: #2c3e50;
             --secondary-blue: #34495e;
             --primary-red: #e74c3c;
+            --secondary-red: #c0392b;
             --white: #ffffff;
             --light-gray: #f5f6fa;
             --border-gray: #dcdde1;
@@ -19,26 +20,30 @@
             background-color: var(--light-gray);
             margin: 0;
             padding: 0;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
         }
 
         .login-container {
-            background-color: var(--white);
+            background: var(--white);
             padding: 40px;
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
             width: 100%;
             max-width: 400px;
+            margin: 20px;
         }
 
-        .login-container h1 {
+        h1 {
             color: var(--primary-blue);
             text-align: center;
             margin-bottom: 30px;
-            font-size: 2em;
+            font-size: 2.5em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         .form-group {
@@ -50,53 +55,99 @@
             margin-bottom: 8px;
             color: var(--primary-blue);
             font-weight: 600;
+            font-size: 1em;
         }
 
         .form-group input {
             width: 100%;
             padding: 12px;
             border: 2px solid var(--border-gray);
-            border-radius: 5px;
+            border-radius: 25px;
             font-size: 1em;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
         }
 
         .form-group input:focus {
             outline: none;
             border-color: var(--primary-blue);
+            box-shadow: 0 0 10px rgba(44, 62, 80, 0.1);
+        }
+
+        .error-message {
+            background-color: var(--primary-red);
+            color: var(--white);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
         }
 
         .login-btn {
             width: 100%;
-            padding: 15px;
-            background: linear-gradient(45deg, var(--primary-blue), var(--secondary-blue));
+            padding: 15px 30px;
+            background: linear-gradient(45deg, var(--primary-blue), var(--primary-red));
             color: var(--white);
             border: none;
-            border-radius: 5px;
+            border-radius: 25px;
             font-size: 1.1em;
+            font-weight: 600;
             cursor: pointer;
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
         .login-btn:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            background: linear-gradient(45deg, var(--primary-red), var(--primary-blue));
         }
 
-        .error-message {
-            color: var(--primary-red);
+        .login-btn:active {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .header-container {
+            background: linear-gradient(45deg, var(--primary-blue), var(--secondary-blue));
+            padding: 20px 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             text-align: center;
-            margin-bottom: 15px;
+        }
+
+        .header-title {
+            color: var(--white);
+            margin: 0;
+            font-size: 1.5em;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
+    <div class="header-container">
+        <h2 class="header-title">Bienvenue sur Crunchtime</h2>
+    </div>
+
     <div class="login-container">
         <h1>Connexion</h1>
-        {% if error %}
-        <div class="error-message">
-            {{ error }}
-        </div>
-        {% endif %}
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="error-message">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         <form action="{{ url_for('login') }}" method="POST">
             <div class="form-group">
                 <label for="username">Nom d'utilisateur</label>

@@ -108,6 +108,7 @@ def login():
         
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
+            session.permanent = True
             flash('Connexion réussie!', 'success')
             return redirect(url_for('home'))
         else:
@@ -235,17 +236,20 @@ def change_status(id_cart):
     item.status = "Rendu" if item.status == "A rendre" else "A rendre"
     db.session.commit()
     flash('Statut modifié avec succès!', 'success')
-    return redirect(url_for('home'))
+    
+    # Récupérer les paramètres de tri et de recherche
+    search = request.form.get('search', '')
+    sort_column = request.form.get('sort_column', '-1')
+    sort_direction = request.form.get('sort_direction', '1')
+    
+    return redirect(url_for('home', search=search, sort_column=sort_column, sort_direction=sort_direction))
 
 @app.route('/groupe_items', methods=['GET', 'POST'])
 def groupe_items():
     try:
         if request.method == 'POST':
             id_groupe = request.form['id_groupe']
-            groupe = Groupe.query.filter_by(
-                id_groupe=id_groupe, 
-                user_id=session['user_id']
-            ).first_or_404()
+            groupe = Groupe.query.get_or_404(id_groupe)
             
             # Récupérer toutes les commandes du groupe
             commandes = Commande.query.filter_by(id_groupe=id_groupe).all()
@@ -266,13 +270,13 @@ def groupe_items():
                                 items_a_rendre=items_a_rendre,
                                 items_rendus=items_rendus)
         
-        # Modifier pour n'obtenir que les groupes de l'utilisateur
-        groupes = Groupe.query.filter_by(user_id=session['user_id']).all()
+        # Afficher tous les groupes
+        groupes = Groupe.query.all()
         return render_template('groupe_items.html', groupes=groupes)
         
     except Exception as e:
         flash('Une erreur est survenue: ' + str(e), 'error')
-        return redirect(url_for('home'))
+        return redirect(url_for('groupe_items'))
 
 @app.route('/delete_item/<int:id_cart>', methods=['POST'])
 @login_required
@@ -285,7 +289,13 @@ def delete_item(id_cart):
     except Exception as e:
         db.session.rollback()
         flash('Erreur lors de la suppression: ' + str(e), 'error')
-    return redirect(url_for('home'))
+    
+    # Récupérer les paramètres de tri et de recherche
+    search = request.form.get('search', '')
+    sort_column = request.form.get('sort_column', '-1')
+    sort_direction = request.form.get('sort_direction', '1')
+    
+    return redirect(url_for('home', search=search, sort_column=sort_column, sort_direction=sort_direction))
 
 @app.route('/edit_item/<int:id_cart>', methods=['GET', 'POST'])
 @login_required
@@ -517,8 +527,8 @@ def setup():
             # Initialiser la base de données
             init_db()
             
-            # Créer l'utilisateur
-            hashed_password = generate_password_hash(password)
+            # Utiliser SHA256 pour le hachage du mot de passe
+            hashed_password = generate_password_hash(password, method='sha256')
             new_user = User(username=username, password=hashed_password)
             db.session.add(new_user)
             db.session.commit()
