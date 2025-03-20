@@ -1,49 +1,128 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sauvegarde - Crunchtime</title>
+    <style>
+        :root {
+            --primary-blue: #2c3e50;
+            --secondary-blue: #34495e;
+            --primary-red: #e74c3c;
+            --white: #ffffff;
+            --light-gray: #f5f6fa;
+            --border-gray: #dcdde1;
+        }
 
-{% block content %}
-<div class="container mt-5">
-    <div class="card">
-        <div class="card-header">
-            <h3>Sauvegarde des données</h3>
+        // ...existing code from home.html styles...
+
+        .backup-card {
+            background: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .backup-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .backup-card-body {
+            padding: 25px;
+            text-align: center;
+        }
+
+        .backup-btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: linear-gradient(45deg, var(--primary-blue), var(--secondary-blue));
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            width: 80%;
+            margin: 10px auto;
+        }
+
+        .backup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .backup-title {
+            color: var(--primary-blue);
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sauvegarde des données</h1>
+    
+    <div class="menu-container">
+        <h2 class="menu-title">Options de sauvegarde</h2>
+        <div class="menu-actions">
+            <a href="{{ url_for('home') }}" class="export-btn">
+                Retour à l'accueil
+            </a>
         </div>
-        <div class="card-body">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Groupes</h5>
-                            <a href="{{ url_for('download_csv', table='groupe') }}" class="btn btn-primary">Télécharger CSV</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Commandes</h5>
-                            <a href="{{ url_for('download_csv', table='commande') }}" class="btn btn-primary">Télécharger CSV</a>
-                        </div>
-                    </div>
+    </div>
+
+    <div class="container">
+        <div class="grid-container">
+            <div class="backup-card">
+                <div class="backup-card-body">
+                    <h3 class="backup-title">Base de données complète</h3>
+                    <p>Télécharger une sauvegarde SQL complète de la base de données</p>
+                    <a href="{{ url_for('download_sql_backup') }}" class="backup-btn">
+                        Télécharger SQL
+                    </a>
                 </div>
             </div>
-            <div class="row mt-3">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Items</h5>
-                            <a href="{{ url_for('download_csv', table='items') }}" class="btn btn-primary">Télécharger CSV</a>
-                        </div>
-                    </div>
+
+            <div class="backup-card">
+                <div class="backup-card-body">
+                    <h3 class="backup-title">Groupes</h3>
+                    <p>Exporter les données des groupes au format CSV</p>
+                    <a href="{{ url_for('download_csv', table='groupe') }}" class="backup-btn">
+                        Télécharger CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="backup-card">
+                <div class="backup-card-body">
+                    <h3 class="backup-title">Commandes</h3>
+                    <p>Exporter les données des commandes au format CSV</p>
+                    <a href="{{ url_for('download_csv', table='commande') }}" class="backup-btn">
+                        Télécharger CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="backup-card">
+                <div class="backup-card-body">
+                    <h3 class="backup-title">Items</h3>
+                    <p>Exporter les données des items au format CSV</p>
+                    <a href="{{ url_for('download_csv', table='items') }}" class="backup-btn">
+                        Télécharger CSV
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+</body>
+</html>

@@ -597,6 +597,62 @@ def setup():
         flash(f'Erreur: {str(e)}', 'error')
         return render_template('setup.html')
 
+@app.route('/download_sql_backup')
+@login_required
+def download_sql_backup():
+    try:
+        # Récupérer les informations de connexion depuis l'URL
+        db_url = app.config['SQLALCHEMY_DATABASE_URI']
+        url_parts = db_url.split('/')
+        db_name = url_parts[-1]
+        user_pass = url_parts[2].split('@')[0]
+        host_port = url_parts[2].split('@')[1]
+        
+        username = user_pass.split(':')[0]
+        password = user_pass.split(':')[1]
+        host = host_port.split(':')[0]
+        port = host_port.split(':')[1]
+
+        # Créer un nom de fichier temporaire unique
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        temp_filename = f'backup_{timestamp}.sql'
+
+        # Configuration de pg_dump
+        env = os.environ.copy()
+        env['PGPASSWORD'] = password
+
+        # Exécuter pg_dump et capturer la sortie
+        cmd = [
+            'pg_dump',
+            '-h', host,
+            '-p', port,
+            '-U', username,
+            '-F', 'p',  # Format plain text
+            db_name
+        ]
+
+        # Exécuter pg_dump et capturer la sortie directement
+        result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+        
+        if result.returncode != 0:
+            raise Exception(f"pg_dump failed: {result.stderr}")
+
+        # Créer un BytesIO object avec le contenu
+        sql_content = BytesIO(result.stdout.encode('utf-8'))
+        sql_content.seek(0)
+
+        return send_file(
+            sql_content,
+            mimetype='application/sql',
+            as_attachment=True,
+            download_name=f'crunchtime_backup_{timestamp}.sql'
+        )
+
+    except Exception as e:
+        app.logger.error(f'Erreur lors de la génération de la sauvegarde SQL: {str(e)}')
+        flash('Erreur lors de la génération de la sauvegarde SQL', 'error')
+        return redirect(url_for('backup'))
+
 if __name__ == "__main__":
     if not os.path.exists('logs'):
         os.mkdir('logs')
