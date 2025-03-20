@@ -14,6 +14,7 @@ import traceback
 import subprocess
 import csv
 from io import StringIO, BytesIO
+import pandas as pd
 
 app = Flask(__name__)
 
@@ -652,6 +653,74 @@ def download_sql_backup():
         app.logger.error(f'Erreur lors de la génération de la sauvegarde SQL: {str(e)}')
         flash('Erreur lors de la génération de la sauvegarde SQL', 'error')
         return redirect(url_for('backup'))
+
+@app.route('/import', methods=['GET', 'POST'])
+@login_required
+def import_data():
+    if request.method == 'POST':
+        try:
+            if 'groupe_file' not in request.files or \
+               'commande_file' not in request.files or \
+               'items_file' not in request.files:
+                flash('Tous les fichiers sont requis', 'error')
+                return redirect(request.url)
+
+            # Lire les fichiers CSV
+            groupe_file = request.files['groupe_file']
+            commande_file = request.files['commande_file']
+            items_file = request.files['items_file']
+
+            # Importer les groupes
+            df_groupes = pd.read_csv(groupe_file)
+            for _, row in df_groupes.iterrows():
+                groupe = Groupe(
+                    table=row['table'],
+                    Nom=row['Nom'],
+                    Prenom=row['Prenom'],
+                    user_id=session['user_id']
+                )
+                db.session.add(groupe)
+            db.session.commit()
+
+            # Créer un mapping des anciens ID vers les nouveaux ID
+            groupe_mapping = {g.id_groupe: g.id_groupe for g in Groupe.query.filter_by(user_id=session['user_id']).all()}
+
+            # Importer les commandes
+            df_commandes = pd.read_csv(commande_file)
+            for _, row in df_commandes.iterrows():
+                commande = Commande(
+                    date_hour=datetime.strptime(row['date_hour'], '%Y-%m-%d %H:%M:%S.%f'),
+                    id_groupe=groupe_mapping[row['id_groupe']]
+                )
+                db.session.add(commande)
+            db.session.commit()
+
+            # Créer un mapping pour les commandes
+            commande_mapping = {c.id_commande: c.id_commande for c in Commande.query.all()}
+
+            # Importer les items
+            df_items = pd.read_csv(items_file)
+            for _, row in df_items.iterrows():
+                item = Items(
+                    id_commande=commande_mapping[row['id_commande']],
+                    status=row['status'],
+                    nom=row['nom'],
+                    technique=row['technique'],
+                    nombre=row['nombre']
+                )
+                db.session.add(item)
+            db.session.commit()
+
+            flash('Données importées avec succès!', 'success')
+            return redirect(url_for('home'))
+
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'Erreur lors de l\'importation: {str(e)}')
+            flash(f'Erreur lors de l\'importation: {str(e)}', 'error')
+            return redirect(request.url)
+
+    return render_template('import_data.html')
 
 if __name__ == "__main__":
     if not os.path.exists('logs'):
