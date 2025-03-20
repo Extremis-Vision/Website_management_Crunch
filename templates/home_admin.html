@@ -320,6 +320,14 @@
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
+    .admin-btn.import-btn {
+        background-color: #27ae60;
+    }
+
+    .admin-btn.import-btn:hover {
+        background-color: #219a52;
+    }
+
     .menu-container {
         display: grid;
         grid-template-columns: auto 1fr auto;
@@ -350,6 +358,10 @@
                 <a href="{{ url_for('restore_db') }}" class="admin-btn">
                     <i class="fas fa-database"></i>
                     Restauration
+                </a>
+                <a href="{{ url_for('import_data') }}" class="admin-btn import-btn">
+                    <i class="fas fa-file-import"></i>
+                    Importer
                 </a>
             </div>
         </div>

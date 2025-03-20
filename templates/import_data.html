@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Import de données - Crunchtime</title>
+    <title>Importer des données</title>
     <style>
         :root {
             --primary-blue: #2c3e50;
             --secondary-blue: #34495e;
             --primary-red: #e74c3c;
+            --secondary-red: #c0392b;
             --white: #ffffff;
             --light-gray: #f5f6fa;
             --border-gray: #dcdde1;
@@ -19,61 +20,74 @@
             background-color: var(--light-gray);
             margin: 0;
             padding: 20px;
-        }
-
-        h1 {
             color: var(--primary-blue);
-            text-align: center;
         }
 
         .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-        }
-
-        .import-card {
-            background: var(--white);
+            background-color: var(--white);
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary-blue);
+            text-align: center;
+            margin-bottom: 30px;
         }
 
         .form-group {
             margin-bottom: 20px;
         }
 
-        .form-group label {
+        label {
             display: block;
             margin-bottom: 10px;
             color: var(--primary-blue);
-            font-weight: 600;
+            font-weight: bold;
         }
 
-        .form-control {
+        input[type="file"] {
             width: 100%;
             padding: 10px;
             border: 2px solid var(--border-gray);
             border-radius: 5px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
         }
 
-        .btn {
-            background: linear-gradient(45deg, var(--primary-blue), var(--secondary-blue));
+        .button {
+            background-color: var(--primary-blue);
             color: var(--white);
-            padding: 12px 25px;
+            padding: 12px 24px;
             border: none;
             border-radius: 25px;
             cursor: pointer;
-            font-weight: 600;
-            width: 100%;
-            margin-top: 20px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            text-align: center;
+            text-decoration: none;
         }
 
-        .btn:hover {
-            opacity: 0.9;
+        .button:hover {
+            background-color: var(--secondary-blue);
             transform: translateY(-2px);
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
         }
 
         .alert {
@@ -89,7 +103,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Import de données</h1>
+        <h1>Importer des données</h1>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -99,26 +113,25 @@
             {% endif %}
         {% endwith %}
 
-        <div class="import-card">
-            <form action="{{ url_for('import_data') }}" method="POST" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label>Fichier Groupes (CSV)</label>
-                    <input type="file" name="groupe_file" class="form-control" accept=".csv" required>
-                </div>
+        <form action="{{ url_for('import_data') }}" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="groupe_file">Fichier CSV des groupes :</label>
+                <input type="file" id="groupe_file" name="groupe_file" accept=".csv" required>
+            </div>
 
-                <div class="form-group">
-                    <label>Fichier Commandes (CSV)</label>
-                    <input type="file" name="commande_file" class="form-control" accept=".csv" required>
-                </div>
+            <div class="form-group">
+                <label for="commande_file">Fichier CSV des commandes :</label>
+                <input type="file" id="commande_file" name="commande_file" accept=".csv" required>
+            </div>
 
-                <div class="form-group">
-                    <label>Fichier Items (CSV)</label>
-                    <input type="file" name="items_file" class="form-control" accept=".csv" required>
-                </div>
+            <div class="form-group">
+                <label for="items_file">Fichier CSV des items :</label>
+                <input type="file" id="items_file" name="items_file" accept=".csv" required>
+            </div>
 
-                <button type="submit" class="btn">Importer les données</button>
-            </form>
-        </div>
+            <button type="submit" class="button">Importer</button>
+        </form>
+        <a href="{{ url_for('admin_home') }}" class="back-link">Retour à l'administration</a>
     </div>
 </body>
 </html>

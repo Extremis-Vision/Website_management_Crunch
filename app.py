@@ -568,8 +568,15 @@ def export_all_data():
         return redirect(url_for('home'))
 
 @app.route('/setup', methods=['GET', 'POST'])
+@login_required  # Ajout du décorateur login_required
 def setup():
     try:
+        # Vérifier si l'utilisateur est admin
+        user = User.query.get(session['user_id'])
+        if user.username != ADMIN_USER:
+            flash('Accès non autorisé', 'error')
+            return redirect(url_for('home'))
+            
         if request.method == 'POST':
             username = request.form.get('username')
             password = request.form.get('password')
