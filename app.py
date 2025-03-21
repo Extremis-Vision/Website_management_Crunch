@@ -857,6 +857,39 @@ def submit_rating():
         app.logger.error(f"Erreur lors de l'enregistrement de la note: {str(e)}")
         return jsonify({'success': False, 'error': str(e)})
 
+@app.route('/ratings')
+@login_required
+def view_ratings():
+    try:
+        # Récupérer toutes les notes avec les noms d'utilisateurs
+        ratings = db.session.query(Rating, User.username)\
+            .join(User)\
+            .order_by(Rating.date_rated.desc())\
+            .all()
+
+        # Calculer la moyenne des notes
+        average_rating = db.session.query(func.avg(Rating.rating)).scalar() or 0
+        total_ratings = db.session.query(func.count(Rating.id_rating)).scalar() or 0
+
+        # Formater les données pour le template
+        formatted_ratings = []
+        for rating, username in ratings:
+            rating_dict = {
+                'rating': rating.rating,
+                'date_rated': rating.date_rated,
+                'username': username
+            }
+            formatted_ratings.append(rating_dict)
+
+        return render_template('ratings.html',
+                             ratings=formatted_ratings,
+                             average_rating=average_rating,
+                             total_ratings=total_ratings)
+    except Exception as e:
+        app.logger.error(f"Erreur lors de l'affichage des notes: {str(e)}")
+        flash("Erreur lors de l'affichage des notes", 'error')
+        return redirect(url_for('home'))
+
 if __name__ == "__main__":
     if not os.path.exists('logs'):
         os.mkdir('logs')

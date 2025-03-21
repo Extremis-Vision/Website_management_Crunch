@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes du Site</title>
+    <style>
+        :root {
+            --primary-blue: #2c3e50;
+            --secondary-blue: #34495e;
+            --primary-red: #e74c3c;
+            --white: #ffffff;
+            --light-gray: #f5f6fa;
+            --border-gray: #dcdde1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-gray);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: var(--primary-blue);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .stats {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: var(--light-gray);
+            border-radius: 10px;
+        }
+
+        .ratings-list {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ratings-list th, .ratings-list td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .ratings-list th {
+            background-color: var(--light-gray);
+            color: var(--primary-blue);
+        }
+
+        .star {
+            color: gold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Notes des Utilisateurs</h1>
+        
+        <div class="stats">
+            <h2>Statistiques</h2>
+            <p>Note moyenne : {{ "%.1f"|format(average_rating) }} / 5</p>
+            <p>Nombre total de notes : {{ total_ratings }}</p>
+        </div>
+
+        <table class="ratings-list">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Note</th>
+                    <th>Utilisateur</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rating in ratings %}
+                <tr>
+                    <td>{{ rating.date_rated.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td>
+                        {% for i in range(rating.rating) %}
+                        <span class="star">★</span>
+                        {% endfor %}
+                    </td>
+                    <td>{{ rating.username }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
