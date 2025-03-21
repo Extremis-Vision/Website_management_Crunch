@@ -332,6 +332,10 @@
     <div class="menu-container">
         <h2 class="menu-title">Gestion des commandes</h2>
         <div class="menu-actions">
+            <a href="{{ url_for('photos') }}" class="export-btn">
+                <i class="fas fa-camera"></i>
+                Photos
+            </a>
             <a href="{{ url_for('export_all_data') }}" class="export-btn">
                 <i class="fas fa-download"></i>
                 Exporter les données

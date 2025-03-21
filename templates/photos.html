@@ -252,6 +252,117 @@
                 padding: 10px;
             }
         }
+
+        .photo-preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--light-gray);
+            border-radius: 8px;
+            min-height: 200px;
+        }
+
+        .preview-item {
+            position: relative;
+            padding-top: 75%;
+            background-color: var(--white);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .preview-item img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-remove {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: var(--primary-red);
+            color: var(--white);
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .preview-remove:hover {
+            background-color: var(--secondary-red);
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border-gray);
+            padding: 20px;
+            text-align: center;
+            background-color: var(--light-gray);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--primary-blue);
+            background-color: rgba(44, 62, 80, 0.05);
+        }
+
+        /* Nouveaux styles pour la recherche de groupe */
+        .groupe-search-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .groupe-search {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-gray);
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+
+        .groupe-select-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid var(--border-gray);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .groupe-option {
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .groupe-option:hover {
+            background-color: var(--light-gray);
+        }
+
+        .groupe-option.selected {
+            background-color: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .no-results {
+            padding: 15px;
+            text-align: center;
+            color: var(--primary-red);
+        }
     </style>
 </head>
 <body>
@@ -264,14 +375,14 @@
         <div class="form-container">
             <form action="{{ url_for('photos') }}" method="POST" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label for="groupe">Sélectionner un groupe :</label>
-                    <select name="groupe" id="groupe" onchange="toggleNewGroupeFields()">
-                        <option value="">Choisir un groupe...</option>
-                        {% for groupe in groupes %}
-                        <option value="{{ groupe.id_groupe }}">Table {{ groupe.table }} - {{ groupe.Nom }} {{ groupe.Prenom }}</option>
-                        {% endfor %}
-                        <option value="new">Créer un nouveau groupe</option>
-                    </select>
+                    <label for="groupe-search">Rechercher ou créer un groupe :</label>
+                    <div class="groupe-search-container">
+                        <input type="text" id="groupe-search" class="groupe-search" placeholder="Rechercher un groupe...">
+                        <input type="hidden" name="groupe" id="groupe-selected">
+                        <div class="groupe-select-container" id="groupe-select">
+                            <!-- Les options seront ajoutées dynamiquement -->
+                        </div>
+                    </div>
                     
                     <div id="newGroupeFields" class="new-groupe-fields">
                         <div class="form-group">
@@ -291,7 +402,11 @@
                 
                 <div class="form-group photo-input">
                     <label for="photos">Sélectionner les photos :</label>
-                    <input type="file" name="photos" id="photos" multiple accept="image/*">
+                    <div class="drop-zone" id="dropZone">
+                        <p>Glissez vos photos ici ou cliquez pour sélectionner</p>
+                        <input type="file" name="photos" id="photos" multiple accept="image/*" style="display: none;">
+                    </div>
+                    <div id="photoPreview" class="photo-preview-container"></div>
                 </div>
                 
                 <button type="submit" class="button">Ajouter les photos</button>
@@ -318,15 +433,141 @@
     </div>
 
     <script>
-        function toggleNewGroupeFields() {
-            const selectElement = document.getElementById('groupe');
-            const newGroupeFields = document.getElementById('newGroupeFields');
+        const groupeSearch = document.getElementById('groupe-search');
+        const groupeSelect = document.getElementById('groupe-select');
+        const groupeSelected = document.getElementById('groupe-selected');
+        const newGroupeFields = document.getElementById('newGroupeFields');
+        
+        // Liste des groupes (à générer à partir des données Flask)
+        const groupes = [
+            {% for groupe in groupes %}
+            {
+                id: "{{ groupe.id_groupe }}",
+                name: "Table {{ groupe.table }} - {{ groupe.Nom }} {{ groupe.Prenom }}"
+            },
+            {% endfor %}
+        ];
+
+        function filterGroupes(searchText) {
+            const filtered = groupes.filter(groupe => 
+                groupe.name.toLowerCase().includes(searchText.toLowerCase())
+            );
             
-            if (selectElement.value === 'new') {
-                newGroupeFields.style.display = 'block';
-            } else {
+            groupeSelect.style.display = 'block';
+            groupeSelect.innerHTML = '';
+            
+            if (filtered.length > 0) {
+                filtered.forEach(groupe => {
+                    const option = document.createElement('div');
+                    option.className = 'groupe-option';
+                    option.textContent = groupe.name;
+                    option.dataset.id = groupe.id;
+                    option.onclick = () => selectGroupe(groupe.id, groupe.name);
+                    groupeSelect.appendChild(option);
+                });
                 newGroupeFields.style.display = 'none';
+            } else {
+                const noResults = document.createElement('div');
+                noResults.className = 'no-results';
+                noResults.textContent = 'Aucun groupe trouvé';
+                groupeSelect.appendChild(noResults);
+                newGroupeFields.style.display = 'block';
+                groupeSelected.value = 'new';
             }
+        }
+
+        function selectGroupe(id, name) {
+            groupeSearch.value = name;
+            groupeSelected.value = id;
+            groupeSelect.style.display = 'none';
+            newGroupeFields.style.display = 'none';
+        }
+
+        let searchTimeout;
+        groupeSearch.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                filterGroupes(e.target.value);
+            }, 300);
+        });
+
+        // Masquer la liste si on clique ailleurs
+        document.addEventListener('click', (e) => {
+            if (!groupeSelect.contains(e.target) && e.target !== groupeSearch) {
+                groupeSelect.style.display = 'none';
+            }
+        });
+
+        // Afficher la liste quand on clique sur le champ de recherche
+        groupeSearch.addEventListener('click', () => {
+            filterGroupes(groupeSearch.value);
+        });
+
+        // Ajout du code pour la prévisualisation des photos
+        const dropZone = document.getElementById('dropZone');
+        const photoInput = document.getElementById('photos');
+        const previewContainer = document.getElementById('photoPreview');
+        let files = [];
+
+        // Gestion du drag & drop
+        dropZone.addEventListener('click', () => photoInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const droppedFiles = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            handleFiles(droppedFiles);
+        });
+
+        photoInput.addEventListener('change', (e) => {
+            handleFiles(Array.from(e.target.files));
+        });
+
+        function handleFiles(newFiles) {
+            files = [...files, ...newFiles];
+            updatePreview();
+            
+            // Mettre à jour l'input file avec les nouveaux fichiers
+            const dataTransfer = new DataTransfer();
+            files.forEach(file => dataTransfer.items.add(file));
+            photoInput.files = dataTransfer.files;
+        }
+
+        function updatePreview() {
+            previewContainer.innerHTML = '';
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'preview-item';
+                    previewItem.innerHTML = `
+                        <button type="button" class="preview-remove" data-index="${index}">&times;</button>
+                        <img src="${e.target.result}" alt="Preview">
+                    `;
+                    previewContainer.appendChild(previewItem);
+
+                    // Ajouter l'événement de suppression
+                    previewItem.querySelector('.preview-remove').addEventListener('click', () => {
+                        files.splice(index, 1);
+                        updatePreview();
+                        
+                        // Mettre à jour l'input file
+                        const dataTransfer = new DataTransfer();
+                        files.forEach(file => dataTransfer.items.add(file));
+                        photoInput.files = dataTransfer.files;
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
         }
     </script>
 </body>
