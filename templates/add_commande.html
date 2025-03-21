@@ -140,7 +140,7 @@
             color: var(--primary-red);
         }
 
-        /* Styles pour la recherche de groupe */
+        /* Nouveaux styles pour la recherche de groupe */
         .groupe-search-container {
             position: relative;
             margin-bottom: 15px;
@@ -162,7 +162,6 @@
             border-radius: 8px;
             margin-bottom: 15px;
             display: none;
-            background-color: var(--white);
         }
 
         .groupe-option {
@@ -185,6 +184,14 @@
             text-align: center;
             color: var(--primary-red);
         }
+
+        .new-groupe-fields {
+            background-color: var(--light-gray);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -201,7 +208,7 @@
                         <!-- Les options seront ajoutées dynamiquement -->
                     </div>
                 </div>
-                
+
                 <div id="newGroupeFields" class="new-groupe-fields">
                     <div class="form-group">
                         <label for="new_table">Numéro de table :</label>
@@ -232,6 +239,23 @@
     </div>
 
     <script>
+        function addItem() {
+            const container = document.getElementById('itemsContainer');
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'item-row';
+            itemDiv.innerHTML = `
+                <input type="text" name="nom[]" placeholder="Nom" required>
+                <input type="text" name="technique[]" placeholder="Technique (optionnel)">
+                <input type="number" name="nombre[]" placeholder="Nombre" value="1" min="1" required>
+                <span class="remove-item" onclick="this.parentElement.remove()">×</span>
+            `;
+            container.appendChild(itemDiv);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            addItem();
+        });
+
         const groupeSearch = document.getElementById('groupe-search');
         const groupeSelect = document.getElementById('groupe-select');
         const groupeSelected = document.getElementById('groupe-selected');
@@ -300,24 +324,6 @@
         // Afficher la liste quand on clique sur le champ de recherche
         groupeSearch.addEventListener('click', () => {
             filterGroupes(groupeSearch.value);
-        });
-
-        // Code existant pour l'ajout d'items
-        function addItem() {
-            const container = document.getElementById('itemsContainer');
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'item-row';
-            itemDiv.innerHTML = `
-                <input type="text" name="nom[]" placeholder="Nom" required>
-                <input type="text" name="technique[]" placeholder="Technique (optionnel)">
-                <input type="number" name="nombre[]" placeholder="Nombre" value="1" min="1" required>
-                <span class="remove-item" onclick="this.parentElement.remove()">×</span>
-            `;
-            container.appendChild(itemDiv);
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            addItem();
         });
     </script>
 </body>

@@ -206,50 +206,144 @@
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
+                margin: 0;
             }
 
             .menu-container {
                 flex-direction: column;
                 gap: 10px;
                 padding: 15px;
+                margin: 0 0 15px 0;
             }
 
-            .photos-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-                gap: 15px;
+            .back-btn {
+                width: 100%;
+                text-align: center;
+                margin: 10px 0;
             }
 
             .form-container {
                 padding: 15px;
+                margin-bottom: 15px;
+                border-radius: 8px;
             }
 
-            .button, .delete-btn {
-                padding: 12px 20px;
+            .photo-preview-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .photos-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .photo-card {
+                margin-bottom: 10px;
+            }
+
+            .photo-info {
+                padding: 10px;
+            }
+
+            .photo-info p {
+                font-size: 0.9em;
+                margin: 3px 0;
+            }
+
+            .button {
+                padding: 12px 15px;
                 font-size: 0.9em;
             }
-            
-            h1 {
-                font-size: 1.5em;
+
+            .drop-zone {
+                padding: 15px;
+                font-size: 0.9em;
+            }
+
+            .preview-remove {
+                width: 20px;
+                height: 20px;
+                font-size: 0.8em;
+            }
+
+            .groupe-search-container {
+                position: sticky;
+                top: 0;
+                z-index: 100;
+                background-color: var(--white);
+                padding: 10px 0;
+            }
+
+            .groupe-select-container {
+                max-height: 150px;
+                position: absolute;
+                width: 100%;
+                background-color: var(--white);
+                z-index: 101;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             }
         }
 
         /* Styles pour les très petits écrans */
         @media (max-width: 480px) {
             body {
-                padding: 10px;
+                padding: 5px;
             }
 
             .photos-grid {
                 grid-template-columns: 1fr;
             }
 
-            .form-container {
-                padding: 10px;
+            .photo-preview-container {
+                grid-template-columns: 1fr;
             }
 
-            select, input[type="text"], input[type="file"] {
+            .menu-title {
+                font-size: 1em;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            .groupe-option {
+                padding: 8px;
                 font-size: 0.9em;
-                padding: 10px;
+            }
+
+            .delete-btn {
+                padding: 8px 12px;
+                font-size: 0.8em;
+            }
+
+            /* Ajustements pour l'orientation portrait */
+            @media (orientation: portrait) {
+                .photo-container {
+                    padding-top: 100%; /* Ratio carré pour les photos */
+                }
+            }
+
+            /* Optimisation pour les gestes tactiles */
+            .button, .delete-btn, .preview-remove {
+                min-height: 44px; /* Taille minimale pour les zones tactiles */
+            }
+
+            .groupe-option {
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+            }
+
+            /* Amélioration de la lisibilité */
+            input, select {
+                font-size: 16px; /* Évite le zoom automatique sur iOS */
+            }
+
+            /* Animation fluide pour le scroll */
+            .groupe-select-container {
+                -webkit-overflow-scrolling: touch;
             }
         }
 
