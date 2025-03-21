@@ -812,6 +812,7 @@ def photos():
     latest_photos = (db.session.query(
         Photo,
         Groupe,
+        func.count(Photo.id_photo).over(partition_by=Photo.id_groupe).label('total_photos'),
         func.row_number().over(
             partition_by=Photo.id_groupe,
             order_by=Photo.upload_date.desc()

@@ -522,7 +522,12 @@
                     <p><a href="{{ url_for('groupe_photos', id_groupe=photo.id_groupe) }}" style="color: var(--primary-blue); text-decoration: none; font-weight: bold;">
                         Table {{ photo.table }} - {{ photo.Nom }} {{ photo.Prenom }}
                     </a></p>
-                    <p>Dernière photo : {{ photo.upload_date.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin: 5px 0;">
+                        <span>{{ photo.upload_date.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                        <span style="background-color: var(--primary-blue); color: var(--white); padding: 2px 8px; border-radius: 12px;">
+                            {{ photo.total_photos }} photos
+                        </span>
+                    </div>
                     <form action="{{ url_for('delete_photo', id_photo=photo.id_photo) }}" method="POST">
                         <button type="submit" class="delete-btn" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette photo ?')">Supprimer</button>
                     </form>
