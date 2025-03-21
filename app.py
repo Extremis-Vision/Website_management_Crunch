@@ -98,6 +98,14 @@ class Photo(db.Model):
     filename = db.Column(db.String(255), nullable=False)
     upload_date = db.Column(db.DateTime, default=datetime.utcnow)
 
+# Nouveau modèle pour les notes
+class Rating(db.Model):
+    __tablename__ = 'ratings'
+    id_rating = db.Column(db.Integer, primary_key=True)
+    rating = db.Column(db.Integer, nullable=False)
+    date_rated = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
 # Décorateur pour protéger les routes
 def login_required(f):
     @wraps(f)
@@ -210,31 +218,52 @@ def add_groupe():
 @login_required
 def add_commande():
     if request.method == 'POST':
-        id_groupe = request.form['id_groupe']
-        noms = request.form.getlist('nom[]')
-        techniques = request.form.getlist('technique[]')
-        nombres = request.form.getlist('nombre[]')
-        
-        new_commande = Commande(id_groupe=id_groupe)
-        db.session.add(new_commande)
-        db.session.commit()
-        
-        for nom, technique, nombre in zip(noms, techniques, nombres):
-            if nom.strip():  # Seulement vérifier si le nom est rempli
-                new_item = Items(
-                    id_commande=new_commande.id_commande,
-                    status="A rendre",
-                    nom=nom.strip(),
-                    technique=technique.strip() if technique.strip() else None,  # Technique peut être vide
-                    nombre=int(nombre)
+        try:
+            # Récupérer les données du formulaire
+            id_groupe = request.form['id_groupe']
+            noms = request.form.getlist('nom[]')
+            techniques = request.form.getlist('technique[]')
+            nombres = request.form.getlist('nombre[]')
+            
+            # Si c'est un nouveau groupe
+            if id_groupe == 'new':
+                new_groupe = Groupe(
+                    table=request.form['new_table'],
+                    Nom=request.form['new_nom'],
+                    Prenom=request.form['new_prenom'],
+                    user_id=session['user_id']
                 )
-                db.session.add(new_item)
-        
-        db.session.commit()
-        flash('Commande ajoutée avec succès!', 'success')
-        return redirect(url_for('home'))
+                db.session.add(new_groupe)
+                db.session.flush()  # Pour obtenir l'id du nouveau groupe
+                id_groupe = new_groupe.id_groupe
+            
+            # Créer la commande
+            new_commande = Commande(id_groupe=id_groupe)
+            db.session.add(new_commande)
+            db.session.flush()  # Pour obtenir l'id de la nouvelle commande
+            
+            # Ajouter les items
+            for nom, technique, nombre in zip(noms, techniques, nombres):
+                if nom.strip():  # Vérifier si le nom n'est pas vide
+                    new_item = Items(
+                        id_commande=new_commande.id_commande,
+                        status="A rendre",
+                        nom=nom.strip(),
+                        technique=technique.strip() if technique.strip() else None,
+                        nombre=int(nombre)
+                    )
+                    db.session.add(new_item)
+            
+            db.session.commit()
+            flash('Commande ajoutée avec succès!', 'success')
+            return redirect(url_for('home'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erreur lors de l\'ajout de la commande: {str(e)}', 'error')
+            return redirect(url_for('add_commande'))
     
-    # Modifier la requête pour obtenir uniquement les groupes de l'utilisateur
+    # GET request
     groupes = Groupe.query.filter_by(user_id=session['user_id']).all()
     return render_template('add_commande.html', groupes=groupes)
 
@@ -809,6 +838,24 @@ def delete_photo(id_photo):
         db.session.rollback()
         flash(f'Erreur lors de la suppression: {str(e)}', 'error')
     return redirect(url_for('photos'))
+
+@app.route('/submit_rating', methods=['POST'])
+@login_required
+def submit_rating():
+    try:
+        rating = request.form.get('rating')
+        
+        if rating:
+            new_rating = Rating(
+                rating=int(rating),
+                user_id=session['user_id']
+            )
+            db.session.add(new_rating)
+            db.session.commit()
+            return jsonify({'success': True})
+    except Exception as e:
+        app.logger.error(f"Erreur lors de l'enregistrement de la note: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)})
 
 if __name__ == "__main__":
     if not os.path.exists('logs'):

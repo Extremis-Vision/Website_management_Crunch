@@ -272,6 +272,13 @@
         ];
 
         function filterGroupes(searchText) {
+            searchText = searchText.trim();
+            if (searchText === '') {
+                groupeSelect.style.display = 'none';
+                newGroupeFields.style.display = 'none';
+                return;
+            }
+            
             const filtered = groupes.filter(groupe => 
                 groupe.name.toLowerCase().includes(searchText.toLowerCase())
             );
@@ -289,10 +296,11 @@
                     groupeSelect.appendChild(option);
                 });
                 newGroupeFields.style.display = 'none';
+                groupeSelected.value = '';
             } else {
                 const noResults = document.createElement('div');
                 noResults.className = 'no-results';
-                noResults.textContent = 'Aucun groupe trouvé';
+                noResults.textContent = 'Aucun groupe trouvé - Créer un nouveau groupe';
                 groupeSelect.appendChild(noResults);
                 newGroupeFields.style.display = 'block';
                 groupeSelected.value = 'new';
@@ -304,6 +312,11 @@
             groupeSelected.value = id;
             groupeSelect.style.display = 'none';
             newGroupeFields.style.display = 'none';
+            
+            // Réinitialiser les champs du nouveau groupe
+            document.getElementById('new_table').value = '';
+            document.getElementById('new_nom').value = '';
+            document.getElementById('new_prenom').value = '';
         }
 
         let searchTimeout;
@@ -325,6 +338,39 @@
         groupeSearch.addEventListener('click', () => {
             filterGroupes(groupeSearch.value);
         });
+
+        // Validation du formulaire
+        document.getElementById('commandeForm').onsubmit = function(e) {
+            e.preventDefault();
+            
+            // Vérifier si un groupe est sélectionné ou si les champs nouveau groupe sont remplis
+            if (groupeSelected.value === '') {
+                alert('Veuillez sélectionner ou créer un groupe');
+                return false;
+            }
+            
+            if (groupeSelected.value === 'new') {
+                // Vérifier les champs du nouveau groupe
+                const table = document.getElementById('new_table').value;
+                const nom = document.getElementById('new_nom').value;
+                const prenom = document.getElementById('new_prenom').value;
+                
+                if (!table || !nom || !prenom) {
+                    alert('Veuillez remplir tous les champs du nouveau groupe');
+                    return false;
+                }
+            }
+            
+            // Vérifier s'il y a au moins un item
+            const items = document.querySelectorAll('.item-row');
+            if (items.length === 0) {
+                alert('Veuillez ajouter au moins un item');
+                return false;
+            }
+            
+            // Soumettre le formulaire si tout est valide
+            this.submit();
+        };
     </script>
 </body>
 </html>
