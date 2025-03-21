@@ -511,15 +511,18 @@
         </div>
 
         <div class="photos-grid">
-            {% for photo, groupe in photos %}
+            {% for photo in photos %}
             <div class="photo-card">
                 <div class="photo-container">
-                    <img src="{{ url_for('get_photo', id_photo=photo.id_photo) }}" alt="Photo" loading="lazy">
+                    <a href="{{ url_for('groupe_photos', id_groupe=photo.id_groupe) }}">
+                        <img src="{{ url_for('get_photo', id_photo=photo.id_photo) }}" alt="Photo" loading="lazy">
+                    </a>
                 </div>
                 <div class="photo-info">
-                    <p>Table {{ groupe.table }}</p>
-                    <p>{{ groupe.Nom }} {{ groupe.Prenom }}</p>
-                    <p>{{ photo.upload_date.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    <p><a href="{{ url_for('groupe_photos', id_groupe=photo.id_groupe) }}" style="color: var(--primary-blue); text-decoration: none; font-weight: bold;">
+                        Table {{ photo.table }} - {{ photo.Nom }} {{ photo.Prenom }}
+                    </a></p>
+                    <p>Dernière photo : {{ photo.upload_date.strftime('%Y-%m-%d %H:%M:%S') }}</p>
                     <form action="{{ url_for('delete_photo', id_photo=photo.id_photo) }}" method="POST">
                         <button type="submit" class="delete-btn" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette photo ?')">Supprimer</button>
                     </form>

@@ -168,6 +168,61 @@
         .star.active {
             color: gold;
         }
+
+        .rating-form {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .rating-form textarea {
+            width: 100%;
+            height: 100px;
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid var(--border-gray);
+            border-radius: 5px;
+            resize: vertical;
+        }
+
+        .rating-distribution {
+            margin: 20px 0;
+        }
+
+        .rating-bar {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            gap: 10px;
+        }
+
+        .bar-container {
+            flex-grow: 1;
+            background: var(--light-gray);
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .bar {
+            height: 100%;
+            background: linear-gradient(45deg, var(--primary-blue), var(--primary-red));
+            transition: width 0.3s ease;
+        }
+
+        .rating-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+            font-size: 1.2em;
+        }
+
+        .rating-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -236,30 +291,45 @@
         </div>
         {% endif %}
         
-        <!-- Ajouter le système de notation à la fin du container -->
+        <!-- Remplacer le système de notation existant par celui-ci -->
         <div class="rating-container">
             <h3>Notez votre expérience</h3>
-            <div class="stars">
-                <span class="star" data-value="1">★</span>
-                <span class="star" data-value="2">★</span>
-                <span class="star" data-value="3">★</span>
-                <span class="star" data-value="4">★</span>
-                <span class="star" data-value="5">★</span>
-            </div>
-            <div style="margin-top: 15px;">
-                <a href="{{ url_for('view_ratings') }}" class="button">Voir toutes les notes</a>
+            <div class="rating-form">
+                <div class="stars">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <textarea id="rating-comment" placeholder="Laissez un commentaire (optionnel)" maxlength="500"></textarea>
+                <div class="rating-stats">
+                    <p>Note moyenne: <span id="avg-rating">-</span>/5</p>
+                    <p>Nombre d'avis: <span id="total-ratings">-</span></p>
+                </div>
+                <div class="rating-distribution" id="rating-distribution">
+                    <!-- La distribution des notes sera injectée ici par JS -->
+                </div>
+                <div class="rating-actions">
+                    <button class="button" onclick="submitRating()">Envoyer</button>
+                    <a href="{{ url_for('ratings_dashboard') }}" class="button">Voir le tableau de bord</a>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Charger les statistiques initiales
+            updateRatingStats();
+        });
+
         const stars = document.querySelectorAll('.star');
         let currentRating = 0;
 
         stars.forEach(star => {
             star.addEventListener('mouseover', function() {
-                const value = this.getAttribute('data-value');
-                highlightStars(value);
+                highlightStars(this.getAttribute('data-value'));
             });
 
             star.addEventListener('mouseout', function() {
@@ -267,39 +337,76 @@
             });
 
             star.addEventListener('click', function() {
-                const value = this.getAttribute('data-value');
-                currentRating = value;
-                submitRating(value);
+                currentRating = this.getAttribute('data-value');
+                highlightStars(currentRating);
             });
         });
 
         function highlightStars(rating) {
             stars.forEach(star => {
                 const value = star.getAttribute('data-value');
-                if (value <= rating) {
-                    star.classList.add('active');
-                } else {
-                    star.classList.remove('active');
-                }
+                star.classList.toggle('active', value <= rating);
             });
         }
 
-        function submitRating(rating) {
+        function updateRatingStats(data) {
+            if (data) {
+                document.getElementById('avg-rating').textContent = data.avgRating.toFixed(1);
+                document.getElementById('total-ratings').textContent = data.totalRatings;
+                
+                // Mettre à jour la distribution
+                const dist = document.getElementById('rating-distribution');
+                dist.innerHTML = '';
+                for (let i = 5; i >= 1; i--) {
+                    const percent = (data.distribution[i] / data.totalRatings * 100) || 0;
+                    dist.innerHTML += `
+                        <div class="rating-bar">
+                            <span>${i}★</span>
+                            <div class="bar-container">
+                                <div class="bar" style="width: ${percent}%"></div>
+                            </div>
+                            <span>${data.distribution[i] || 0}</span>
+                        </div>
+                    `;
+                }
+            } else {
+                fetch('/ratings_stats')
+                    .then(response => response.json())
+                    .then(data => updateRatingStats(data));
+            }
+        }
+
+        function submitRating() {
+            if (!currentRating) {
+                alert('Veuillez sélectionner une note');
+                return;
+            }
+
+            const comment = document.getElementById('rating-comment').value;
+            
             fetch('/submit_rating', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `rating=${rating}`
+                body: `rating=${currentRating}&comment=${encodeURIComponent(comment)}`
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     alert('Merci pour votre note !');
+                    updateRatingStats(data);
+                    // Réinitialiser le formulaire
+                    currentRating = 0;
+                    document.getElementById('rating-comment').value = '';
+                    highlightStars(0);
+                } else {
+                    alert('Erreur lors de l\'envoi de la note');
                 }
             })
             .catch(error => {
                 console.error('Erreur:', error);
+                alert('Erreur lors de l\'envoi de la note');
             });
         }
     </script>

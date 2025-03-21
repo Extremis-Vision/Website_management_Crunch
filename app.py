@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import os
 from datetime import datetime
@@ -103,8 +103,10 @@ class Rating(db.Model):
     __tablename__ = 'ratings'
     id_rating = db.Column(db.Integer, primary_key=True)
     rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text, nullable=True)  # Nouveau champ pour les commentaires
     date_rated = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user = db.relationship('User', backref='ratings')  # Ajout de la relation
 
 # Décorateur pour protéger les routes
 def login_required(f):
@@ -806,13 +808,24 @@ def photos():
             db.session.rollback()
             flash(f'Erreur: {str(e)}', 'error')
     
-    # Récupérer les groupes de l'utilisateur connecté
-    groupes = Groupe.query.filter_by(user_id=session['user_id']).all()
-    photos = (db.session.query(Photo, Groupe)
-             .join(Groupe)
-             .filter(Groupe.user_id == session['user_id'])
+    # Récupérer les groupes de l'utilisateur connecté avec leur photo la plus récente
+    latest_photos = (db.session.query(
+        Photo,
+        Groupe,
+        func.row_number().over(
+            partition_by=Photo.id_groupe,
+            order_by=Photo.upload_date.desc()
+        ).label('rn')
+    ).join(Groupe)
+     .filter(Groupe.user_id == session['user_id'])
+     .subquery())
+
+    # Sélectionner uniquement la photo la plus récente de chaque groupe
+    photos = (db.session.query(latest_photos)
+             .filter(latest_photos.c.rn == 1)
              .all())
     
+    groupes = Groupe.query.filter_by(user_id=session['user_id']).all()
     return render_template('photos.html', groupes=groupes, photos=photos)
 
 @app.route('/photo/<int:id_photo>')
@@ -844,15 +857,37 @@ def delete_photo(id_photo):
 def submit_rating():
     try:
         rating = request.form.get('rating')
+        comment = request.form.get('comment', '').strip()
         
         if rating:
             new_rating = Rating(
                 rating=int(rating),
+                comment=comment if comment else None,
                 user_id=session['user_id']
             )
             db.session.add(new_rating)
             db.session.commit()
-            return jsonify({'success': True})
+            
+            # Calculer les nouvelles statistiques
+            avg_rating = db.session.query(func.avg(Rating.rating)).scalar() or 0
+            total_ratings = db.session.query(func.count(Rating.id_rating)).scalar()
+            ratings_dist = db.session.query(
+                Rating.rating,
+                func.count(Rating.id_rating)
+            ).group_by(Rating.rating).all()
+            
+            # Formater la distribution des notes
+            distribution = {i: 0 for i in range(1, 6)}
+            for r, count in ratings_dist:
+                distribution[r] = count
+            
+            return jsonify({
+                'success': True,
+                'avgRating': float(avg_rating),
+                'totalRatings': total_ratings,
+                'distribution': distribution
+            })
+            
     except Exception as e:
         app.logger.error(f"Erreur lors de l'enregistrement de la note: {str(e)}")
         return jsonify({'success': False, 'error': str(e)})
@@ -889,6 +924,67 @@ def view_ratings():
         app.logger.error(f"Erreur lors de l'affichage des notes: {str(e)}")
         flash("Erreur lors de l'affichage des notes", 'error')
         return redirect(url_for('home'))
+
+@app.route('/ratings_dashboard')
+@login_required
+def ratings_dashboard():
+    try:
+        # Statistiques générales
+        avg_rating = db.session.query(func.avg(Rating.rating)).scalar() or 0
+        total_ratings = db.session.query(func.count(Rating.id_rating)).scalar()
+        
+        # Distribution des notes
+        ratings_dist = db.session.query(
+            Rating.rating,
+            func.count(Rating.id_rating)
+        ).group_by(Rating.rating).all()
+        
+        # Derniers commentaires
+        recent_ratings = db.session.query(Rating, User)\
+            .join(User)\
+            .order_by(Rating.date_rated.desc())\
+            .limit(10)\
+            .all()
+        
+        # Evolution des notes dans le temps
+        ratings_evolution = db.session.query(
+            func.date(Rating.date_rated),
+            func.avg(Rating.rating)
+        ).group_by(func.date(Rating.date_rated))\
+         .order_by(func.date(Rating.date_rated))\
+         .all()
+        
+        return render_template('ratings_dashboard.html',
+                             avg_rating=float(avg_rating),
+                             total_ratings=total_ratings,
+                             ratings_dist=dict(ratings_dist),
+                             recent_ratings=recent_ratings,
+                             ratings_evolution=ratings_evolution)
+                             
+    except Exception as e:
+        app.logger.error(f"Erreur lors de l'affichage du dashboard: {str(e)}")
+        flash("Erreur lors de l'affichage du dashboard", 'error')
+        return redirect(url_for('home'))
+
+@app.route('/groupe_photos/<int:id_groupe>')
+@login_required
+def groupe_photos(id_groupe):
+    try:
+        groupe = Groupe.query.get_or_404(id_groupe)
+        
+        # Vérifier que l'utilisateur a accès à ce groupe
+        if groupe.user_id != session['user_id']:
+            flash('Accès non autorisé', 'error')
+            return redirect(url_for('photos'))
+        
+        # Récupérer toutes les photos du groupe
+        photos = Photo.query.filter_by(id_groupe=id_groupe).order_by(Photo.upload_date.desc()).all()
+        
+        return render_template('groupe_photos.html', groupe=groupe, photos=photos)
+    except Exception as e:
+        app.logger.error(f"Erreur lors de l'affichage des photos du groupe: {str(e)}")
+        flash('Une erreur est survenue', 'error')
+        return redirect(url_for('photos'))
 
 if __name__ == "__main__":
     if not os.path.exists('logs'):

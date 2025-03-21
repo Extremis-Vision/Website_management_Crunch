@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord des Notes</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-blue: #2c3e50;
+            --secondary-blue: #34495e;
+            --primary-red: #e74c3c;
+            --white: #ffffff;
+            --light-gray: #f5f6fa;
+            --border-gray: #dcdde1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-gray);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .stats-card {
+            text-align: center;
+        }
+
+        .big-number {
+            font-size: 3em;
+            color: var(--primary-blue);
+            font-weight: bold;
+        }
+
+        .chart-container {
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .recent-ratings {
+            margin-top: 30px;
+        }
+
+        .rating-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .rating-item:last-child {
+            border-bottom: none;
+        }
+
+        .rating-stars {
+            color: gold;
+            font-size: 1.2em;
+        }
+
+        .rating-meta {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .rating-comment {
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        h1, h2 {
+            color: var(--primary-blue);
+            margin-bottom: 20px;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary-blue);
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('home') }}" class="back-button">← Retour</a>
+        <h1>Tableau de Bord des Notes</h1>
+
+        <div class="dashboard-grid">
+            <div class="dashboard-card stats-card">
+                <h2>Note Moyenne</h2>
+                <div class="big-number">{{ "%.1f"|format(avg_rating) }}</div>
+                <div>sur 5 étoiles</div>
+            </div>
+
+            <div class="dashboard-card stats-card">
+                <h2>Nombre Total d'Avis</h2>
+                <div class="big-number">{{ total_ratings }}</div>
+                <div>avis déposés</div>
+            </div>
+
+            <div class="dashboard-card">
+                <h2>Distribution des Notes</h2>
+                <div class="chart-container">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <h2>Évolution des Notes</h2>
+            <div class="chart-container">
+                <canvas id="evolutionChart"></canvas>
+            </div>
+        </div>
+
+        <div class="dashboard-card recent-ratings">
+            <h2>Derniers Avis</h2>
+            {% for rating, user in recent_ratings %}
+            <div class="rating-item">
+                <div class="rating-stars">
+                    {% for _ in range(rating.rating) %}★{% endfor %}
+                </div>
+                <div class="rating-meta">
+                    Par {{ user.username }} le {{ rating.date_rated.strftime('%d/%m/%Y à %H:%M') }}
+                </div>
+                {% if rating.comment %}
+                <div class="rating-comment">
+                    "{{ rating.comment }}"
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        // Graphique de distribution
+        const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+        new Chart(distributionCtx, {
+            type: 'bar',
+            data: {
+                labels: ['1★', '2★', '3★', '4★', '5★'],
+                datasets: [{
+                    label: 'Nombre d\'avis',
+                    data: [
+                        {{ ratings_dist.get(1, 0) }},
+                        {{ ratings_dist.get(2, 0) }},
+                        {{ ratings_dist.get(3, 0) }},
+                        {{ ratings_dist.get(4, 0) }},
+                        {{ ratings_dist.get(5, 0) }}
+                    ],
+                    backgroundColor: 'rgba(44, 62, 80, 0.7)',
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // Graphique d'évolution
+        const evolutionCtx = document.getElementById('evolutionChart').getContext('2d');
+        new Chart(evolutionCtx, {
+            type: 'line',
+            data: {
+                labels: [
+                    {% for date, _ in ratings_evolution %}
+                        "{{ date.strftime('%d/%m/%Y') }}",
+                    {% endfor %}
+                ],
+                datasets: [{
+                    label: 'Note moyenne',
+                    data: [
+                        {% for _, avg in ratings_evolution %}
+                            {{ "%.2f"|format(avg) }},
+                        {% endfor %}
+                    ],
+                    borderColor: 'rgb(231, 76, 60)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 5
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
