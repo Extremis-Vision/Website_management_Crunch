@@ -41,4 +41,7 @@ CrunchLab est un outil de gestion de stock développé spécifiquement pour le "
 Cet outil a été développé pour optimiser la gestion du matériel pendant le Crunch Time, permettant un suivi précis et en temps réel des emprunts, facilitant ainsi le travail des organisateurs et assurant une meilleure expérience pour les participants.
 
 ## 📝 Licence
-Ce projet est sous licence MIT.
+Ce projet est sous licence MIT. Toute utilisation à des fins commerciales ou associatives n'est pas permise sans l'aval du créateur et détenteur.
+
+## ⏳ Contexte de Développement
+Il est important de noter que CrunchLab a été développé dans des délais très courts, tout en étant utilisé en parallèle pour aider des personnes. En raison de ces contraintes, aucune optimisation n'a pu être réalisée, que ce soit au niveau des tables de la base de données, du chargement des images, de la gestion des temps de session de connexion, ou d'autres aspects.
