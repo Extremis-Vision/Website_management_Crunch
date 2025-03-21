@@ -498,8 +498,11 @@
                     <label for="photos">Sélectionner les photos :</label>
                     <div class="drop-zone" id="dropZone">
                         <p>Glissez vos photos ici ou cliquez pour sélectionner</p>
-                        <input type="file" name="photos" id="photos" multiple accept="image/*" style="display: none;">
+                        <input type="file" name="photos" id="photos" multiple accept="image/*" style="display: none;" capture="environment">
+                        <button type="button" id="cameraButton" class="button" style="margin-top: 10px;">Utiliser l'appareil photo</button>
                     </div>
+                    <video id="camera" style="display: none; width: 100%; margin-top: 10px;" autoplay playsinline></video>
+                    <canvas id="canvas" style="display: none;"></canvas>
                     <div id="photoPreview" class="photo-preview-container"></div>
                 </div>
                 
@@ -662,6 +665,58 @@
                 };
                 reader.readAsDataURL(file);
             });
+        }
+
+        // Ajout du code pour la caméra
+        const cameraButton = document.getElementById('cameraButton');
+        const cameraElement = document.getElementById('camera');
+        const canvas = document.getElementById('canvas');
+        let stream = null;
+
+        cameraButton.addEventListener('click', async () => {
+            try {
+                if (stream) {
+                    stopCamera();
+                    return;
+                }
+
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment'
+                    }, 
+                    audio: false 
+                });
+                
+                cameraElement.srcObject = stream;
+                cameraElement.style.display = 'block';
+                cameraButton.textContent = 'Prendre la photo';
+                
+                cameraButton.onclick = () => {
+                    // Capture la photo
+                    canvas.width = cameraElement.videoWidth;
+                    canvas.height = cameraElement.videoHeight;
+                    canvas.getContext('2d').drawImage(cameraElement, 0, 0);
+                    
+                    // Convertit le canvas en fichier
+                    canvas.toBlob((blob) => {
+                        const file = new File([blob], "photo-" + new Date().getTime() + ".jpg", { type: "image/jpeg" });
+                        handleFiles([file]);
+                        stopCamera();
+                    }, 'image/jpeg');
+                };
+            } catch (err) {
+                console.error('Erreur lors de l\'accès à la caméra:', err);
+                alert('Impossible d\'accéder à la caméra. Veuillez vérifier les permissions.');
+            }
+        });
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                cameraElement.style.display = 'none';
+                cameraButton.textContent = 'Utiliser l\'appareil photo';
+            }
         }
     </script>
 </body>

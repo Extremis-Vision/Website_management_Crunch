@@ -883,7 +883,7 @@ def view_ratings():
 
         return render_template('ratings.html',
                              ratings=formatted_ratings,
-                             average_rating=average_rating,
+                             average_rating=float(average_rating),
                              total_ratings=total_ratings)
     except Exception as e:
         app.logger.error(f"Erreur lors de l'affichage des notes: {str(e)}")
