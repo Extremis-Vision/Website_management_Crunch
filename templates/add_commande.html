@@ -139,6 +139,52 @@
         .add-groupe-btn:hover {
             color: var(--primary-red);
         }
+
+        /* Styles pour la recherche de groupe */
+        .groupe-search-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .groupe-search {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-gray);
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+
+        .groupe-select-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid var(--border-gray);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+            background-color: var(--white);
+        }
+
+        .groupe-option {
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .groupe-option:hover {
+            background-color: var(--light-gray);
+        }
+
+        .groupe-option.selected {
+            background-color: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .no-results {
+            padding: 15px;
+            text-align: center;
+            color: var(--primary-red);
+        }
     </style>
 </head>
 <body>
@@ -147,12 +193,29 @@
         
         <form action="{{ url_for('add_commande') }}" method="POST" id="commandeForm">
             <div class="form-group">
-                <label for="id_groupe">Groupe:</label>
-                <select name="id_groupe" id="id_groupe" required>
-                    {% for groupe in groupes %}
-                        <option value="{{ groupe.id_groupe }}">{{ groupe.Nom }} {{ groupe.Prenom }}</option>
-                    {% endfor %}
-                </select>
+                <label for="groupe-search">Rechercher ou créer un groupe :</label>
+                <div class="groupe-search-container">
+                    <input type="text" id="groupe-search" class="groupe-search" placeholder="Rechercher un groupe...">
+                    <input type="hidden" name="id_groupe" id="groupe-selected">
+                    <div class="groupe-select-container" id="groupe-select">
+                        <!-- Les options seront ajoutées dynamiquement -->
+                    </div>
+                </div>
+                
+                <div id="newGroupeFields" class="new-groupe-fields">
+                    <div class="form-group">
+                        <label for="new_table">Numéro de table :</label>
+                        <input type="text" name="new_table" id="new_table">
+                    </div>
+                    <div class="form-group">
+                        <label for="new_nom">Nom :</label>
+                        <input type="text" name="new_nom" id="new_nom">
+                    </div>
+                    <div class="form-group">
+                        <label for="new_prenom">Prénom :</label>
+                        <input type="text" name="new_prenom" id="new_prenom">
+                    </div>
+                </div>
             </div>
 
             <div id="itemsContainer">
@@ -164,12 +227,82 @@
         </form>
 
         <div class="navigation">
-            <a href="{{ url_for('add_groupe') }}" class="add-groupe-btn">+ Ajouter un nouveau groupe</a>
             <a href="{{ url_for('home') }}" class="button button-secondary">Retour à l'accueil</a>
         </div>
     </div>
 
     <script>
+        const groupeSearch = document.getElementById('groupe-search');
+        const groupeSelect = document.getElementById('groupe-select');
+        const groupeSelected = document.getElementById('groupe-selected');
+        const newGroupeFields = document.getElementById('newGroupeFields');
+        
+        // Liste des groupes (à générer à partir des données Flask)
+        const groupes = [
+            {% for groupe in groupes %}
+            {
+                id: "{{ groupe.id_groupe }}",
+                name: "Table {{ groupe.table }} - {{ groupe.Nom }} {{ groupe.Prenom }}"
+            },
+            {% endfor %}
+        ];
+
+        function filterGroupes(searchText) {
+            const filtered = groupes.filter(groupe => 
+                groupe.name.toLowerCase().includes(searchText.toLowerCase())
+            );
+            
+            groupeSelect.style.display = 'block';
+            groupeSelect.innerHTML = '';
+            
+            if (filtered.length > 0) {
+                filtered.forEach(groupe => {
+                    const option = document.createElement('div');
+                    option.className = 'groupe-option';
+                    option.textContent = groupe.name;
+                    option.dataset.id = groupe.id;
+                    option.onclick = () => selectGroupe(groupe.id, groupe.name);
+                    groupeSelect.appendChild(option);
+                });
+                newGroupeFields.style.display = 'none';
+            } else {
+                const noResults = document.createElement('div');
+                noResults.className = 'no-results';
+                noResults.textContent = 'Aucun groupe trouvé';
+                groupeSelect.appendChild(noResults);
+                newGroupeFields.style.display = 'block';
+                groupeSelected.value = 'new';
+            }
+        }
+
+        function selectGroupe(id, name) {
+            groupeSearch.value = name;
+            groupeSelected.value = id;
+            groupeSelect.style.display = 'none';
+            newGroupeFields.style.display = 'none';
+        }
+
+        let searchTimeout;
+        groupeSearch.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                filterGroupes(e.target.value);
+            }, 300);
+        });
+
+        // Masquer la liste si on clique ailleurs
+        document.addEventListener('click', (e) => {
+            if (!groupeSelect.contains(e.target) && e.target !== groupeSearch) {
+                groupeSelect.style.display = 'none';
+            }
+        });
+
+        // Afficher la liste quand on clique sur le champ de recherche
+        groupeSearch.addEventListener('click', () => {
+            filterGroupes(groupeSearch.value);
+        });
+
+        // Code existant pour l'ajout d'items
         function addItem() {
             const container = document.getElementById('itemsContainer');
             const itemDiv = document.createElement('div');
