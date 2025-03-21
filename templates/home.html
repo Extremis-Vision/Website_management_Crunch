@@ -295,6 +295,34 @@
         .column-menu input[type="checkbox"] {
             margin-right: 8px;
         }
+
+        /* Styles pour les en-têtes triables */
+        th {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th::after {
+            content: '⇅';
+            position: absolute;
+            right: 8px;
+            opacity: 0.3;
+        }
+
+        th.asc::after {
+            content: '↑';
+            opacity: 1;
+        }
+
+        th.desc::after {
+            content: '↓';
+            opacity: 1;
+        }
+
+        th:hover::after {
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
@@ -461,16 +489,41 @@
                 let x = a.cells[currentSortColumn].textContent.trim();
                 let y = b.cells[currentSortColumn].textContent.trim();
                 
-                if (!isNaN(x) && !isNaN(y)) {
-                    return currentSortDirection * (parseFloat(x) - parseFloat(y));
+                // Tri spécial pour la colonne Table (index 0)
+                if (currentSortColumn === 0) {
+                    return currentSortDirection * x.localeCompare(y);
                 }
+                
+                // Tri spécial pour la colonne Date/Heure (index 1)
                 if (currentSortColumn === 1) {
-                    return currentSortDirection * (new Date(x) - new Date(y));
+                    let dateX = new Date(x);
+                    let dateY = new Date(y);
+                    return currentSortDirection * (dateX - dateY);
                 }
-                return currentSortDirection * x.localeCompare(y);
+                
+                // Tri spécial pour la colonne Nombre (index 4)
+                if (currentSortColumn === 4) {
+                    let numX = parseFloat(x) || 0;
+                    let numY = parseFloat(y) || 0;
+                    return currentSortDirection * (numX - numY);
+                }
+                
+                // Tri spécial pour la colonne Status (index 5)
+                if (currentSortColumn === 5) {
+                    // Mettre "A rendre" en premier si tri ascendant
+                    if (x === "A rendre" && y !== "A rendre") return -1 * currentSortDirection;
+                    if (x !== "A rendre" && y === "A rendre") return 1 * currentSortDirection;
+                    return currentSortDirection * x.localeCompare(y);
+                }
+                
+                // Tri par défaut pour les autres colonnes
+                return currentSortDirection * x.localeCompare(y, undefined, {numeric: true, sensitivity: 'base'});
             });
 
-            rows.forEach(row => table.appendChild(row));
+            // Réorganiser les lignes dans le tableau
+            let tbody = table.getElementsByTagName('tbody')[0];
+            rows.forEach(row => tbody.appendChild(row));
+            
             updateForms();
         }
 

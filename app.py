@@ -89,6 +89,15 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)  # Augmenté à 255 caractères
 
+# Ajouter après les autres modèles
+class Photo(db.Model):
+    __tablename__ = 'photos'
+    id_photo = db.Column(db.Integer, primary_key=True)
+    id_groupe = db.Column(db.Integer, db.ForeignKey('groupe.id_groupe'), nullable=False)
+    photo_data = db.Column(db.LargeBinary, nullable=False)
+    filename = db.Column(db.String(255), nullable=False)
+    upload_date = db.Column(db.DateTime, default=datetime.utcnow)
+
 # Décorateur pour protéger les routes
 def login_required(f):
     @wraps(f)
@@ -728,6 +737,78 @@ def import_data():
             return redirect(request.url)
 
     return render_template('import_data.html')
+
+# Ajouter les nouvelles routes
+@app.route('/photos', methods=['GET', 'POST'])
+@login_required
+def photos():
+    if request.method == 'POST':
+        try:
+            id_groupe = request.form.get('groupe')
+            if id_groupe == 'new':
+                # Créer un nouveau groupe
+                new_groupe = Groupe(
+                    table=request.form['new_table'],
+                    Nom=request.form['new_nom'],
+                    Prenom=request.form['new_prenom'],
+                    user_id=session['user_id']
+                )
+                db.session.add(new_groupe)
+                db.session.commit()
+                id_groupe = new_groupe.id_groupe
+            
+            # Gérer les photos
+            photos = request.files.getlist('photos')
+            for photo in photos:
+                if photo and photo.filename:
+                    photo_data = photo.read()
+                    new_photo = Photo(
+                        id_groupe=id_groupe,
+                        photo_data=photo_data,
+                        filename=photo.filename
+                    )
+                    db.session.add(new_photo)
+            
+            db.session.commit()
+            flash('Photos ajoutées avec succès!', 'success')
+            return redirect(url_for('photos'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erreur: {str(e)}', 'error')
+    
+    # Récupérer les groupes de l'utilisateur connecté
+    groupes = Groupe.query.filter_by(user_id=session['user_id']).all()
+    photos = (db.session.query(Photo, Groupe)
+             .join(Groupe)
+             .filter(Groupe.user_id == session['user_id'])
+             .all())
+    
+    return render_template('photos.html', groupes=groupes, photos=photos)
+
+@app.route('/photo/<int:id_photo>')
+@login_required
+def get_photo(id_photo):
+    photo = Photo.query.get_or_404(id_photo)
+    return send_file(
+        BytesIO(photo.photo_data),
+        mimetype='image/jpeg',
+        as_attachment=False,
+        download_name=photo.filename
+    )
+
+@app.route('/delete_photo/<int:id_photo>', methods=['POST'])
+@login_required
+def delete_photo(id_photo):
+    photo = Photo.query.get_or_404(id_photo)
+    try:
+        db.session.delete(photo)
+        db.session.commit()
+        flash('Photo supprimée avec succès!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erreur lors de la suppression: {str(e)}', 'error')
+    return redirect(url_for('photos'))
 
 if __name__ == "__main__":
     if not os.path.exists('logs'):
